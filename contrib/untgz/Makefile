@@ -1,5 +1,5 @@
 CC=cc
-CFLAGS=-g
+LOCAL_CFLAGS=-g
 
 untgz: untgz.o ../../libz.a
 	$(CC) $(CFLAGS) -o untgz untgz.o -L../.. -lz
