@@ -47,3 +47,13 @@ LOCAL_MODULE:= libunz
 LOCAL_ARM_MODE := arm
 include $(BUILD_STATIC_LIBRARY)
 
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES:=        \
+	minigzip.c
+
+LOCAL_MODULE:= gzip
+
+LOCAL_SHARED_LIBRARIES := libz
+
+include $(BUILD_EXECUTABLE)
