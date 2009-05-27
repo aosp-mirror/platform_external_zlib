@@ -5,7 +5,7 @@ include $(CLEAR_VARS)
 # than the thumb one...
 LOCAL_ARM_MODE := arm
 
-LOCAL_SRC_FILES:= \
+zlib_files := \
 	adler32.c \
 	compress.c \
 	crc32.c \
@@ -19,11 +19,26 @@ LOCAL_SRC_FILES:= \
 	inftrees.c \
 	inffast.c
 
-LOCAL_MODULE:= libz
-
-LOCAL_CFLAGS+= -O3 -DUSE_MMAP
-
+LOCAL_MODULE := libz
+LOCAL_CFLAGS += -O3 -DUSE_MMAP
+LOCAL_SRC_FILES := $(zlib_files)
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
+LOCAL_ARM_MODE := arm
+LOCAL_MODULE := libz
+LOCAL_CFLAGS += -O3 -DUSE_MMAP
+LOCAL_SRC_FILES := $(zlib_files)
+include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+
+LOCAL_ARM_MODE := arm
+LOCAL_MODULE := libz
+LOCAL_CFLAGS += -O3 -DUSE_MMAP
+LOCAL_SRC_FILES := $(zlib_files)
+include $(BUILD_HOST_STATIC_LIBRARY)
 
 
 
@@ -57,3 +72,15 @@ LOCAL_MODULE:= gzip
 LOCAL_SHARED_LIBRARIES := libz
 
 include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES:=        \
+	minigzip.c
+
+LOCAL_MODULE:= minigzip
+
+LOCAL_STATIC_LIBRARIES := libz
+
+include $(BUILD_HOST_EXECUTABLE)
+
