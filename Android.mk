@@ -9,7 +9,10 @@ zlib_files := \
 	adler32.c \
 	compress.c \
 	crc32.c \
-	gzio.c \
+	gzclose.c \
+	gzlib.c \
+	gzread.c \
+	gzwrite.c \
 	uncompr.c \
 	deflate.c \
 	trees.c \
