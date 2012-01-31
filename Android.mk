@@ -9,18 +9,18 @@ zlib_files := \
 	adler32.c \
 	compress.c \
 	crc32.c \
+	deflate.c \
 	gzclose.c \
 	gzlib.c \
 	gzread.c \
 	gzwrite.c \
-	uncompr.c \
-	deflate.c \
-	trees.c \
-	zutil.c \
-	inflate.c \
 	infback.c \
+	inflate.c \
 	inftrees.c \
-	inffast.c
+	inffast.c \
+	trees.c \
+	uncompr.c \
+	zutil.c
 
 LOCAL_MODULE := libz
 LOCAL_MODULE_TAGS := optional
@@ -56,22 +56,21 @@ include $(BUILD_HOST_STATIC_LIBRARY)
 
 
 
-unzip_files := \
-	adler32.c \
-	crc32.c \
-	zutil.c \
-	inflate.c \
-	inftrees.c \
-	inffast.c
+# libunz used to be an unzip-only subset of libz. Only host-side tools were
+# taking advantage of it, though, and it's not a notion supported by zlib
+# itself. This caused trouble during the 1.2.6 upgrade because libunz ended
+# up needing to drag in most of the other files anyway. So this is a first
+# step towards killing libunz. If you're reading this in the K release or
+# later, please see if you can get a bit further in removing libunz...
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := $(unzip_files)
+LOCAL_SRC_FILES := $(zlib_files)
 LOCAL_MODULE:= libunz
 LOCAL_ARM_MODE := arm
 include $(BUILD_HOST_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := $(unzip_files)
+LOCAL_SRC_FILES := $(zlib_files)
 LOCAL_MODULE:= libunz
 LOCAL_ARM_MODE := arm
 ifneq ($(TARGET_ARCH),x86)
