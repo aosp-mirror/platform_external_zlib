@@ -55,6 +55,16 @@ LOCAL_SRC_FILES := $(zlib_files)
 include $(BUILD_HOST_STATIC_LIBRARY)
 
 
+include $(CLEAR_VARS)
+
+LOCAL_ARM_MODE := arm
+LOCAL_MODULE := libz
+LOCAL_MODULE_TAGS := optional
+LOCAL_CFLAGS += -O3 -DUSE_MMAP
+LOCAL_SRC_FILES := $(zlib_files)
+include $(BUILD_HOST_SHARED_LIBRARY)
+
+
 
 # libunz used to be an unzip-only subset of libz. Only host-side tools were
 # taking advantage of it, though, and it's not a notion supported by zlib
