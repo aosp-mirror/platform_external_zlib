@@ -50,6 +50,7 @@ LOCAL_MODULE := libz
 LOCAL_MODULE_TAGS := optional
 LOCAL_CFLAGS += -O3 -DUSE_MMAP
 LOCAL_SRC_FILES := $(zlib_files)
+LOCAL_MULTILIB := both
 include $(BUILD_HOST_STATIC_LIBRARY)
 
 
@@ -60,6 +61,7 @@ LOCAL_MODULE := libz-host
 LOCAL_MODULE_TAGS := optional
 LOCAL_CFLAGS += -O3 -DUSE_MMAP
 LOCAL_SRC_FILES := $(zlib_files)
+LOCAL_MULTILIB := both
 include $(BUILD_HOST_SHARED_LIBRARY)
 
 
@@ -75,6 +77,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(zlib_files)
 LOCAL_MODULE:= libunz
 LOCAL_ARM_MODE := arm
+LOCAL_MULTILIB := both
 include $(BUILD_HOST_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
