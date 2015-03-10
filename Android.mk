@@ -25,6 +25,10 @@ zlib_files := \
 LOCAL_MODULE := libz
 LOCAL_MODULE_TAGS := optional
 LOCAL_CFLAGS += -O3 -DUSE_MMAP
+
+# TODO: This is to work around b/19059885. Remove after root cause is fixed
+LOCAL_LDFLAGS := -Wl,--hash-style=both
+
 LOCAL_SRC_FILES := $(zlib_files)
 ifneq ($(TARGET_BUILD_APPS),)
 ifeq ($(TARGET_ARCH),arm)
