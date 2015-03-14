@@ -1,0 +1,64 @@
+// measurements show that the ARM version of ZLib is about x1.17 faster
+// than the thumb one...
+// ANDROIDMK TRANSLATION ERROR: unsupported assignment to LOCAL_ARM_MODE
+// LOCAL_ARM_MODE:=arm
+zlib_files = [
+    "src/adler32.c",
+    "src/compress.c",
+    "src/crc32.c",
+    "src/deflate.c",
+    "src/gzclose.c",
+    "src/gzlib.c",
+    "src/gzread.c",
+    "src/gzwrite.c",
+    "src/infback.c",
+    "src/inflate.c",
+    "src/inftrees.c",
+    "src/inffast.c",
+    "src/trees.c",
+    "src/uncompr.c",
+    "src/zutil.c",
+]
+
+cc_library {
+    name: "libz",
+    host_supported: true,
+    tags: ["optional"],
+    cflags: [
+        "-O3",
+        "-DUSE_MMAP",
+    ],
+    srcs: zlib_files,
+    // ANDROIDMK TRANSLATION ERROR: unsupported directive
+    // ifeq ($(TARGET_ARCH),arm)
+    // ANDROIDMK TRANSLATION ERROR: unsupported assignment to LOCAL_SDK_VERSION
+    // LOCAL_SDK_VERSION:=9
+    // ANDROIDMK TRANSLATION ERROR: unsupported directive
+    // endif
+    export_include_dirs: ["."],
+}
+
+// ANDROIDMK TRANSLATION ERROR: unsupported assignment to LOCAL_ARM_MODE
+// LOCAL_ARM_MODE:=arm
+
+// ANDROIDMK TRANSLATION ERROR: unsupported include
+// include $(BUILD_HOST_SHARED_LIBRARY)
+cc_binary {
+
+    srcs: ["src/test/minigzip.c"],
+
+    name: "gzip",
+
+    shared_libs: ["libz"],
+
+}
+
+cc_binary_host {
+
+    srcs: ["src/test/minigzip.c"],
+
+    name: "minigzip",
+
+    static_libs: ["libz"],
+
+}
