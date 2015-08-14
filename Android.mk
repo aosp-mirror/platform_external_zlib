@@ -31,9 +31,7 @@ LOCAL_LDFLAGS_arm := -Wl,--hash-style=both
 
 LOCAL_SRC_FILES := $(zlib_files)
 ifneq ($(TARGET_BUILD_APPS),)
-ifeq ($(TARGET_ARCH),arm)
   LOCAL_SDK_VERSION := 9
-endif
 endif
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
 include $(BUILD_SHARED_LIBRARY)
@@ -46,9 +44,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_CFLAGS += -O3 -DUSE_MMAP
 LOCAL_SRC_FILES := $(zlib_files)
 ifneq ($(TARGET_BUILD_APPS),)
-ifeq ($(TARGET_ARCH),arm)
   LOCAL_SDK_VERSION := 9
-endif
 endif
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
 include $(BUILD_STATIC_LIBRARY)
