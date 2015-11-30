@@ -32,7 +32,7 @@ LOCAL_LDFLAGS_arm := -Wl,--hash-style=both
 LOCAL_SRC_FILES := $(zlib_files)
 ifneq ($(TARGET_BUILD_APPS),)
   LOCAL_SDK_VERSION := 9
-  LOCAL_NDL_STL_VARIANT := none
+  LOCAL_NDK_STL_VARIANT := none
 else
   LOCAL_CXX_STL := none
 endif
@@ -48,7 +48,7 @@ LOCAL_CFLAGS += -O3 -DUSE_MMAP
 LOCAL_SRC_FILES := $(zlib_files)
 ifneq ($(TARGET_BUILD_APPS),)
   LOCAL_SDK_VERSION := 9
-  LOCAL_NDL_STL_VARIANT := none
+  LOCAL_NDK_STL_VARIANT := none
 else
   LOCAL_CXX_STL := none
 endif
