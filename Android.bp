@@ -1,0 +1,81 @@
+cc_defaults {
+    name: "zlib_defaults",
+
+    cflags: [
+        "-O3",
+        "-DUSE_MMAP",
+    ],
+    stl: "none",
+    export_include_dirs: ["."],
+    srcs: [
+        "src/adler32.c",
+        "src/compress.c",
+        "src/crc32.c",
+        "src/deflate.c",
+        "src/gzclose.c",
+        "src/gzlib.c",
+        "src/gzread.c",
+        "src/gzwrite.c",
+        "src/infback.c",
+        "src/inflate.c",
+        "src/inftrees.c",
+        "src/inffast.c",
+        "src/trees.c",
+        "src/uncompr.c",
+        "src/zutil.c",
+    ],
+
+    arch: {
+        arm: {
+            // measurements show that the ARM version of ZLib is about x1.17 faster
+            // than the thumb one...
+            instruction_set: "arm",
+
+            // TODO: This is to work around b/24465209. Remove after root cause is fixed
+            ldflags: ["-Wl,--hash-style=both"],
+        },
+    },
+
+    target: {
+        windows: {
+            enabled: true,
+        },
+    },
+}
+
+cc_library {
+    name: "libz",
+    defaults: ["zlib_defaults"],
+
+    host_supported: true,
+
+    target: {
+        host: {
+            shared: {
+                // The host shared library is built as libz-host
+                enabled: false,
+            },
+        },
+    },
+}
+
+// Separate host shared library definition, since we don't want to conflict
+// with the host-supplied libz
+cc_library_host_shared {
+    name: "libz-host",
+    defaults: ["zlib_defaults"],
+}
+
+cc_binary {
+    name: "gzip",
+    srcs: ["src/test/minigzip.c"],
+    shared_libs: ["libz"],
+    stl: "none",
+}
+
+cc_binary_host {
+    name: "minigzip",
+    srcs: ["src/test/minigzip.c"],
+    static_libs: ["libz"],
+    stl: "none",
+}
