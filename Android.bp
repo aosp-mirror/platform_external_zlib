@@ -79,3 +79,20 @@ cc_binary_host {
     static_libs: ["libz"],
     stl: "none",
 }
+
+ndk_headers {
+    name: "libz_headers",
+    from: "src",
+    to: "",
+    srcs: [
+        "src/zconf.h",
+        "src/zlib.h",
+        "src/zutil.h",
+    ],
+}
+
+ndk_library {
+    name: "libz.ndk",
+    symbol_file: "libz.map.txt",
+    first_version: "9",
+}
