@@ -45,5 +45,8 @@ cc_library(
         "-Wno-unused-variable",
         "-Wno-implicit-function-declaration",
     ],
+    includes = [
+        "src"
+    ],
     visibility = ["//visibility:public"],
 )
