@@ -89,6 +89,7 @@ ndk_headers {
         "src/zlib.h",
         "src/zutil.h",
     ],
+    license: "NOTICE",
 }
 
 ndk_library {
