@@ -10,7 +10,7 @@ base_dir=$(realpath $(dirname $0))
 
 # Extract the latest version from the web page.
 new_version=$(wget -O - --no-verbose -q http://zlib.net/ | \
-              grep 'http://zlib.net/zlib-[0-9].*.tar.gz' | \
+              grep 'href=\"zlib-[0-9].*.tar.gz' | \
               sed 's/.*zlib-\(.*\)\.tar\.gz.*/\1/')
 tgz_file="zlib-$new_version.tar.gz"
 
