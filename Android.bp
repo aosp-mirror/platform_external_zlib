@@ -83,6 +83,20 @@ cc_binary_host {
     stl: "none",
 }
 
+cc_binary {
+    name: "zlib_example",
+    srcs: ["src/test/minigzip.c"],
+    shared_libs: ["libz"],
+    stl: "none",
+}
+
+cc_binary_host {
+    name: "zlib_example_host",
+    srcs: ["src/test/example.c"],
+    static_libs: ["libz"],
+    stl: "none",
+}
+
 // This module is defined in development/ndk/Android.bp. Updating these headers
 // to be usable for any API level is going to be some work (at the very least,
 // there's a ZLIB_VERNUM that will need to be handled since early versions of
