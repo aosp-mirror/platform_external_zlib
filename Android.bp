@@ -4,6 +4,7 @@ cc_defaults {
     cflags: [
         "-O3",
         "-DUSE_MMAP",
+        "-DZLIB_CONST",
     ],
     stl: "none",
     export_include_dirs: ["."],
