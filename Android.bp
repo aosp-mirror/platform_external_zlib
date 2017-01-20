@@ -86,7 +86,7 @@ cc_binary_host {
 
 cc_binary {
     name: "zlib_example",
-    srcs: ["src/test/minigzip.c"],
+    srcs: ["src/test/example.c"],
     shared_libs: ["libz"],
     stl: "none",
 }
