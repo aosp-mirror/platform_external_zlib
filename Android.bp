@@ -119,7 +119,7 @@ cc_binary_host {
 // }
 
 ndk_library {
-    name: "libz.ndk",
+    name: "libz",
     symbol_file: "libz.map.txt",
     first_version: "9",
     unversioned_until: "current",
