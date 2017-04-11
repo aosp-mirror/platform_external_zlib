@@ -70,13 +70,6 @@ cc_library_host_shared {
     defaults: ["zlib_defaults"],
 }
 
-cc_binary {
-    name: "gzip",
-    srcs: ["src/test/minigzip.c"],
-    shared_libs: ["libz"],
-    stl: "none",
-}
-
 cc_binary_host {
     name: "minigzip",
     srcs: ["src/test/minigzip.c"],
