@@ -52,6 +52,7 @@ cc_library {
     defaults: ["zlib_defaults"],
 
     host_supported: true,
+    vendor_available : true,
 
     target: {
         host: {
