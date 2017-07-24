@@ -52,7 +52,11 @@ cc_library {
     defaults: ["zlib_defaults"],
 
     host_supported: true,
-    vendor_available : true,
+    vendor_available: true,
+    vndk: {
+        enabled: true,
+        support_system_process: true,
+    },
 
     target: {
         host: {
