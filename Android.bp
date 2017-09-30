@@ -1,10 +1,21 @@
-cc_defaults {
-    name: "zlib_defaults",
+cc_library {
+    name: "libz",
+
+    host_supported: true,
+    unique_host_soname: true,
+
+    vendor_available: true,
+    vndk: {
+        enabled: true,
+        support_system_process: true,
+    },
 
     cflags: [
         "-O3",
         "-DUSE_MMAP",
         "-DZLIB_CONST",
+        "-Wall",
+        "-Werror",
     ],
     stl: "none",
     export_include_dirs: ["."],
@@ -47,37 +58,10 @@ cc_defaults {
     },
 }
 
-cc_library {
-    name: "libz",
-    defaults: ["zlib_defaults"],
-
-    host_supported: true,
-    vendor_available: true,
-    vndk: {
-        enabled: true,
-        support_system_process: true,
-    },
-
-    target: {
-        host: {
-            shared: {
-                // The host shared library is built as libz-host
-                enabled: false,
-            },
-        },
-    },
-}
-
-// Separate host shared library definition, since we don't want to conflict
-// with the host-supplied libz
-cc_library_host_shared {
-    name: "libz-host",
-    defaults: ["zlib_defaults"],
-}
-
 cc_binary_host {
     name: "minigzip",
     srcs: ["src/test/minigzip.c"],
+    cflags: ["-Wall", "-Werror"],
     static_libs: ["libz"],
     stl: "none",
 }
@@ -85,6 +69,7 @@ cc_binary_host {
 cc_binary {
     name: "zlib_example",
     srcs: ["src/test/example.c"],
+    cflags: ["-Wall", "-Werror"],
     shared_libs: ["libz"],
     stl: "none",
 }
@@ -92,6 +77,7 @@ cc_binary {
 cc_binary_host {
     name: "zlib_example_host",
     srcs: ["src/test/example.c"],
+    cflags: ["-Wall", "-Werror"],
     static_libs: ["libz"],
     stl: "none",
 }
