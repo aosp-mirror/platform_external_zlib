@@ -3,6 +3,7 @@ cc_library {
 
     host_supported: true,
     unique_host_soname: true,
+    static_ndk_lib: true,
 
     vendor_available: true,
     vndk: {
