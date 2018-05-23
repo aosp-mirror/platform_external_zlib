@@ -47,6 +47,7 @@ cc_library {
 
             // TODO: This is to work around b/24465209. Remove after root cause is fixed
             ldflags: ["-Wl,--hash-style=both"],
+            use_clang_lld: false,
         },
     },
 
