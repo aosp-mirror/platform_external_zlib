@@ -10,6 +10,7 @@ cc_library {
         enabled: true,
         support_system_process: true,
     },
+    recovery_available: true,
 
     cflags: [
         "-O3",
@@ -45,6 +46,7 @@ cc_library {
             instruction_set: "arm",
 
             // TODO: This is to work around b/24465209. Remove after root cause is fixed
+            pack_relocations: false,
             ldflags: ["-Wl,--hash-style=both"],
         },
     },
