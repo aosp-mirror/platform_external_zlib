@@ -230,20 +230,22 @@ endif()
 # Example binaries
 #============================================================================
 
-add_executable(example test/example.c)
-target_link_libraries(example zlib)
-add_test(example example)
+set(zlib-example_src test/example.c)
+android_add_test(zlib-example)
+target_link_libraries(zlib-example PRIVATE zlib)
 
-add_executable(minigzip test/minigzip.c)
-target_link_libraries(minigzip zlib)
+set(minigzip_src test/minigzip.c)
+android_add_executable(minigzip)
+target_link_libraries(minigzip PRIVATE zlib)
 
 if(HAVE_OFF64_T)
-    add_executable(example64 test/example.c)
-    target_link_libraries(example64 zlib)
-    set_target_properties(example64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
-    add_test(example64 example64)
+    set(zlib-example64_src test/example.c)
+    android_add_test(zlib-example64)
+    set_target_properties(zlib-example64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
+    target_link_libraries(zlib-example64 PRIVATE zlib)
 
-    add_executable(minigzip64 test/minigzip.c)
-    target_link_libraries(minigzip64 zlib)
+    set(minigzip64_src test/minigzip.c)
+    android_add_executable(minigzip64)
+    target_link_libraries(minigzip64 PRIVATE zlib)
     set_target_properties(minigzip64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
 endif()
