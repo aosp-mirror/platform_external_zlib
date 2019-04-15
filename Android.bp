@@ -47,13 +47,7 @@ cc_library {
 
             // TODO: This is to work around b/24465209. Remove after root cause is fixed
             pack_relocations: false,
-            ldflags: [
-                "-Wl,--hash-style=both",
-                // TODO: This works around b/130267141 to avoid re-exporting
-                // _Unwind_XXX symbols and needs to be removed when a
-                // global location for this can be found.
-                "-Wl,--exclude-libs,libgcc.a",
-            ],
+            ldflags: ["-Wl,--hash-style=both"],
         },
     },
 
