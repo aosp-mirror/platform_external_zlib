@@ -14,6 +14,7 @@ cc_library {
 
     cflags: [
         "-O3",
+        "-DHAVE_HIDDEN",
         "-DUSE_MMAP",
         "-DZLIB_CONST",
         "-Wall",
