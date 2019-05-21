@@ -11,9 +11,11 @@ cc_library {
         support_system_process: true,
     },
     recovery_available: true,
+    native_bridge_supported: true,
 
     cflags: [
         "-O3",
+        "-DHAVE_HIDDEN",
         "-DUSE_MMAP",
         "-DZLIB_CONST",
         "-Wall",
