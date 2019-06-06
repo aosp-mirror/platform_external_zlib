@@ -10,7 +10,9 @@
 
 /* This include does prefixing as below, but with an updated set of names.  Also
  * sets up export macros in component builds. */
+#if 0 /* ANDROID: Renaming symbols breaks the AOSP build. */
 #include "chromeconf.h"
+#endif
 
 /*
  * If you *really* need a unique prefix for all types and library functions,
