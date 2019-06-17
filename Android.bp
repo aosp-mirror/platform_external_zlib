@@ -1,17 +1,5 @@
-cc_library {
-    name: "libz",
-
-    host_supported: true,
-    unique_host_soname: true,
-    static_ndk_lib: true,
-
-    vendor_available: true,
-    vndk: {
-        enabled: true,
-        support_system_process: true,
-    },
-    recovery_available: true,
-    native_bridge_supported: true,
+cc_defaults {
+    name: "libz_defaults",
 
     cflags: [
         "-O3",
@@ -57,6 +45,23 @@ cc_library {
             ldflags: ["-Wl,--hash-style=both"],
         },
     },
+}
+
+cc_library {
+    name: "libz",
+    defaults: ["libz_defaults"],
+
+    host_supported: true,
+    unique_host_soname: true,
+    static_ndk_lib: true,
+
+    vendor_available: true,
+    vndk: {
+        enabled: true,
+        support_system_process: true,
+    },
+    recovery_available: true,
+    native_bridge_supported: true,
 
     target: {
         linux_bionic: {
@@ -66,6 +71,12 @@ cc_library {
             enabled: true,
         },
     },
+}
+
+cc_library_static {
+    name: "libz_current",
+    defaults: ["libz_defaults"],
+    sdk_version: "current",
 }
 
 cc_binary_host {
