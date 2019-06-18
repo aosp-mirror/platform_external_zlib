@@ -1,6 +1,9 @@
 licenses(["notice"])
 
-exports_files(["NOTICE"])
+exports_files([
+    "NOTICE",
+    "zlib.h",
+])
 
 genrule(
     name = "copy_zconf",
@@ -46,7 +49,7 @@ cc_library(
         "-Wno-implicit-function-declaration",
     ],
     includes = [
-        "src"
+        "src",
     ],
     visibility = ["//visibility:public"],
 )
