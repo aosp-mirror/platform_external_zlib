@@ -2,8 +2,7 @@ cc_defaults {
     name: "libz_defaults",
 
     cflags: [
-        // Upstream chromium renames all the functions; we don't want that.
-        "-DCHROMIUM_ZLIB_NO_CHROMECONF",
+        "-O3",
         "-DHAVE_HIDDEN",
         "-DZLIB_CONST",
         "-Wall",
