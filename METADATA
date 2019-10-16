@@ -5,11 +5,11 @@ third_party {
     type: GIT
     value: "https://chromium.googlesource.com/chromium/src/third_party/zlib/"
   }
-  version: "0044d0424c7f7d15436541ed1ecc89479b8bfda4"
+  version: "ddebad26cfadeb4ecdfe3da8beb396a85cf90c91"
   license_type: NOTICE
   last_upgrade_date {
     year: 2019
-    month: 9
+    month: 10
     day: 9
   }
 }
