@@ -29,10 +29,13 @@
 #endif /* MAKECRCH */
 
 #include "deflate.h"
-#include "cpu_features.h"
+#include "x86.h"
 #include "zutil.h"      /* for STDC and FAR definitions */
 
-#if defined(CRC32_SIMD_SSE42_PCLMUL) || defined(CRC32_ARMV8_CRC32)
+#if defined(CRC32_SIMD_SSE42_PCLMUL)
+#include "crc32_simd.h"
+#elif defined(CRC32_ARMV8_CRC32)
+#include "arm_features.h"
 #include "crc32_simd.h"
 #endif
 
@@ -223,7 +226,7 @@ unsigned long ZEXPORT crc32_z(crc, buf, len)
      */
     if (buf == Z_NULL) {
         if (!len) /* Assume user is calling crc32(0, NULL, 0); */
-            cpu_check_features();
+            x86_check_features();
         return 0UL;
     }
 
@@ -286,7 +289,7 @@ unsigned long ZEXPORT crc32(crc, buf, len)
      */
     if (buf == Z_NULL) {
         if (!len) /* Assume user is calling crc32(0, NULL, 0); */
-            cpu_check_features();
+            arm_check_features();
         return 0UL;
     }
 
@@ -497,31 +500,25 @@ uLong ZEXPORT crc32_combine64(crc1, crc2, len2)
 
 ZLIB_INTERNAL void crc_reset(deflate_state *const s)
 {
-#ifdef ADLER32_SIMD_SSSE3
     if (x86_cpu_enable_simd) {
         crc_fold_init(s);
         return;
     }
-#endif
     s->strm->adler = crc32(0L, Z_NULL, 0);
 }
 
 ZLIB_INTERNAL void crc_finalize(deflate_state *const s)
 {
-#ifdef ADLER32_SIMD_SSSE3
     if (x86_cpu_enable_simd)
         s->strm->adler = crc_fold_512to32(s);
-#endif
 }
 
 ZLIB_INTERNAL void copy_with_crc(z_streamp strm, Bytef *dst, long size)
 {
-#ifdef ADLER32_SIMD_SSSE3
     if (x86_cpu_enable_simd) {
         crc_fold_copy(strm->state, dst, strm->next_in, size);
         return;
     }
-#endif
     zmemcpy(dst, strm->next_in, size);
     strm->adler = crc32(strm->adler, dst, size);
 }
