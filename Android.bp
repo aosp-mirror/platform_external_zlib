@@ -60,6 +60,7 @@ cc_library {
         enabled: true,
         support_system_process: true,
     },
+    ramdisk_available: true,
     recovery_available: true,
     native_bridge_supported: true,
 
