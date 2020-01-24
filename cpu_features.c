@@ -35,12 +35,10 @@ int ZLIB_INTERNAL x86_cpu_enable_simd = 0;
 #include <zircon/features.h>
 #include <zircon/syscalls.h>
 #include <zircon/types.h>
-#elif defined(ARMV8_OS_WINDOWS) || defined(X86_WINDOWS)
+#elif defined(_MSC_VER)
 #include <windows.h>
-#elif !defined(_MSC_VER)
-#include <pthread.h>
 #else
-#error cpu_features.c CPU feature detection in not defined for your platform
+#include <pthread.h>
 #endif
 
 #if !defined(CPU_NO_SIMD) && !defined(ARM_OS_IOS)
@@ -51,13 +49,17 @@ static void _cpu_check_features(void);
 static pthread_once_t cpu_check_inited_once = PTHREAD_ONCE_INIT;
 void ZLIB_INTERNAL cpu_check_features(void)
 {
+#if !defined(CPU_NO_SIMD) && !defined(ARM_OS_IOS)
     pthread_once(&cpu_check_inited_once, _cpu_check_features);
+#endif
 }
-#elif defined(ARMV8_OS_WINDOWS) || defined(X86_WINDOWS)
+#elif defined(_MSC_VER)
 static INIT_ONCE cpu_check_inited_once = INIT_ONCE_STATIC_INIT;
 static BOOL CALLBACK _cpu_check_features_forwarder(PINIT_ONCE once, PVOID param, PVOID* context)
 {
+#if !defined(CPU_NO_SIMD) && !defined(ARM_OS_IOS)
     _cpu_check_features();
+#endif
     return TRUE;
 }
 void ZLIB_INTERNAL cpu_check_features(void)
