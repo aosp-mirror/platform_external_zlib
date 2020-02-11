@@ -15,6 +15,7 @@ cc_defaults {
     srcs: [
         "adler32.c",
         "compress.c",
+        "cpu_features.c",
         "crc32.c",
         "deflate.c",
         "gzclose.c",
@@ -28,8 +29,6 @@ cc_defaults {
         "trees.c",
         "uncompr.c",
         "zutil.c",
-
-        "simd_stub.c",
     ],
 
     arch: {
@@ -60,6 +59,7 @@ cc_library {
         enabled: true,
         support_system_process: true,
     },
+    ramdisk_available: true,
     recovery_available: true,
     native_bridge_supported: true,
 
