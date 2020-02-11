@@ -15,6 +15,7 @@ cc_defaults {
     srcs: [
         "adler32.c",
         "compress.c",
+        "cpu_features.c",
         "crc32.c",
         "deflate.c",
         "gzclose.c",
@@ -28,8 +29,6 @@ cc_defaults {
         "trees.c",
         "uncompr.c",
         "zutil.c",
-
-        "simd_stub.c",
     ],
 
     arch: {
