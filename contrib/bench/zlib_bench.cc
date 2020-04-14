@@ -282,12 +282,12 @@ char* get_option(int argc, char* argv[], const char* option) {
 
 bool get_compression(int argc, char* argv[], int* value) {
   if (argn < argc)
-    *value = atoi(argv[argn++]);
-  return *value >= 1 && *value <= 9;
+    *value = isdigit(argv[argn][0]) ? atoi(argv[argn++]) : -1;
+  return *value >= 0 && *value <= 9;
 }
 
 void usage_exit(const char* program) {
-  printf("usage: %s gzip|zlib|raw [--compression 1:9] files...\n", program);
+  printf("usage: %s gzip|zlib|raw [--compression 0:9] files...\n", program);
   exit(1);
 }
 
