@@ -201,7 +201,10 @@ source_set("zlib_crc32_simd") {
 
 config("zlib_x86_simd_config") {
   if (use_x86_x64_optimizations) {
-    defines = [ "CRC32_SIMD_SSE42_PCLMUL" ]
+    defines = [
+      "CRC32_SIMD_SSE42_PCLMUL",
+      "DEFLATE_FILL_WINDOW_SSE2",
+    ]
   }
 }
 
