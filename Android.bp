@@ -139,14 +139,6 @@ cc_library {
     },
 }
 
-// libz_current allows modules building against the NDK to have access to zlib
-// API that's not available from the NDK libz.
-cc_library_static {
-    name: "libz_current",
-    defaults: ["libz_defaults"],
-    sdk_version: "current",
-}
-
 cc_binary_host {
     name: "minigzip",
     srcs: ["contrib/minigzip/minigzip.c"],
@@ -188,6 +180,20 @@ cc_binary {
 //     ],
 //     license: "NOTICE",
 // }
+
+// TODO(b/155351357) remove this library and let libtextclassifier to use libz
+// instead.
+// libz_current allows modules building against the NDK to have access to zlib
+// API that's not available from the NDK libz.
+cc_library_static {
+    name: "libz_current",
+    defaults: ["libz_defaults"],
+    sdk_version: "current",
+
+    apex_available: [
+        "com.android.extservices", // indirectly via libtextclassifier
+    ],
+}
 
 ndk_library {
     name: "libz",
