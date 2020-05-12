@@ -169,25 +169,16 @@ cc_binary {
     },
 }
 
-// This module is defined in development/ndk/Android.bp. Updating these headers
-// to be usable for any API level is going to be some work (at the very least,
-// there's a ZLIB_VERNUM that will need to be handled since early versions of
-// Android did not have all the APIs that calling code will use if this is set
-// to the current value.
-//
-// The NDK never updated the zlib headers when the platform updated, so until we
-// solve this the NDK will continue shipping the old headers.
-//
-// ndk_headers {
-//     name: "libz_headers",
-//     from: "src",
-//     to: "",
-//     srcs: [
-//         "src/zconf.h",
-//         "src/zlib.h",
-//     ],
-//     license: "NOTICE",
-// }
+ndk_headers {
+    name: "libz_headers",
+    from: "",
+    to: "",
+    srcs: [
+        "zconf.h",
+        "zlib.h",
+    ],
+    license: "LICENSE",
+}
 
 ndk_library {
     name: "libz",
