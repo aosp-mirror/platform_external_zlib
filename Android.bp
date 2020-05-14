@@ -139,14 +139,6 @@ cc_library {
     },
 }
 
-// libz_current allows modules building against the NDK to have access to zlib
-// API that's not available from the NDK libz.
-cc_library_static {
-    name: "libz_current",
-    defaults: ["libz_defaults"],
-    sdk_version: "current",
-}
-
 cc_binary_host {
     name: "minigzip",
     srcs: ["contrib/minigzip/minigzip.c"],
