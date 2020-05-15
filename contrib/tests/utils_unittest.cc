@@ -5,9 +5,9 @@
 #include <cstddef>
 #include <vector>
 
+#include "infcover.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "third_party/zlib/google/compression_utils_portable.h"
-
 #include "zlib.h"
 
 void TestPayloads(size_t input_size, zlib_internal::WrapperType type) {
@@ -55,4 +55,36 @@ TEST(ZlibTest, RawWrapper) {
   // should be payload_size + 2 for short payloads.
   for (size_t i = 1; i < 1024; ++i)
     TestPayloads(i, zlib_internal::WrapperType::ZRAW);
+}
+
+TEST(ZlibTest, InflateCover) {
+  cover_support();
+  cover_wrap();
+  cover_back();
+  cover_inflate();
+  // TODO(cavalcantii): enable this last test.
+  // cover_trees();
+  cover_fast();
+}
+
+TEST(ZlibTest, DeflateStored) {
+  const int no_compression = 0;
+  const zlib_internal::WrapperType type = zlib_internal::WrapperType::GZIP;
+  std::vector<unsigned char> input(1 << 10, 42);
+  std::vector<unsigned char> compressed(
+      zlib_internal::GzipExpectedCompressedSize(input.size()));
+  std::vector<unsigned char> decompressed(input.size());
+  unsigned long compressed_size = static_cast<unsigned long>(compressed.size());
+  int result = zlib_internal::CompressHelper(
+      type, compressed.data(), &compressed_size, input.data(), input.size(),
+      no_compression, nullptr, nullptr);
+  ASSERT_EQ(result, Z_OK);
+
+  unsigned long decompressed_size =
+      static_cast<unsigned long>(decompressed.size());
+  result = zlib_internal::UncompressHelper(type, decompressed.data(),
+                                           &decompressed_size,
+                                           compressed.data(), compressed_size);
+  ASSERT_EQ(result, Z_OK);
+  EXPECT_EQ(input, decompressed);
 }
