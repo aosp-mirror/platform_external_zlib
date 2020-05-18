@@ -137,14 +137,6 @@ cc_library {
             enabled: true,
         },
     },
-
-    stubs: {
-        versions: [
-            "29",
-            "30",
-        ],
-        symbol_file: "libz.map.txt",
-    },
 }
 
 cc_binary_host {
