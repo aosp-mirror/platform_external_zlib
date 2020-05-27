@@ -79,7 +79,7 @@ ZLIB_1.2.5.2 {
     inflateResetKeep;
 } ZLIB_1.2.5.1;
 
-ZLIB_1.2.7.1 { # introduced=18
+ZLIB_1.2.7.1 { # introduced=19
     inflateGetDictionary;
     gzvprintf;
 } ZLIB_1.2.5.2;
