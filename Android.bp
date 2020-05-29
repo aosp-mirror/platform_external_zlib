@@ -71,6 +71,20 @@ cc_library {
             enabled: true,
         },
     },
+
+// TODO(b/155456180): make libz a stub-providing library by uncommenting below
+//    stubs: {
+//        versions: ["29", "30"],
+//        symbol_file: "libz.map.txt",
+//    },
+
+    apex_available: [
+        "//apex_available:platform",
+        "com.android.art.debug", // from libdexfile
+        "com.android.art.release",
+        "com.android.bluetooth.updatable",
+        "com.android.runtime",
+    ],
 }
 
 cc_library_static {
