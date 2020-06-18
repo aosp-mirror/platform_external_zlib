@@ -18,6 +18,9 @@
       "name": "ziparchive-tests"
     },
     {
+      "name": "zlib_tests"
+    },
+    {
       "name": "CtsLibcoreTestCases",
       "options": [
         {
