@@ -137,6 +137,14 @@ cc_library {
             enabled: true,
         },
     },
+
+    stubs: {
+        versions: [
+            "29",
+            "30",
+        ],
+        symbol_file: "libz.map.txt",
+    },
 }
 
 cc_binary_host {
@@ -159,6 +167,23 @@ cc_binary {
         lib32: { suffix: "32", },
         lib64: { suffix: "64", },
     },
+}
+
+cc_test {
+    name: "zlib_tests",
+    srcs: [
+        "contrib/tests/infcover.cc",
+        "contrib/tests/utils_unittest.cc",
+        "google/compression_utils_portable.cc",
+    ],
+    include_dirs: [
+        "external/zlib/google",
+        // These tests include "gtest.h" rather than the usual "gtest/gtest.h".
+        "external/googletest/googletest/include/gtest/",
+    ],
+    shared_libs: ["libz"],
+    host_supported: true,
+    test_suites: ["device-tests"],
 }
 
 ndk_headers {
