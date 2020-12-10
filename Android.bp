@@ -5,7 +5,6 @@ srcs_opt = [
 //    "contrib/optimizations/inffast_chunk.c",
 //    "contrib/optimizations/inflate.c",
     // This file doesn't build for non-neon, so it can't be in the main srcs.
-    "cpu_features.c",
     "crc32_simd.c",
 ]
 
@@ -17,8 +16,13 @@ cflags_arm = [
     // Testing with zlib_bench shows -O3 is a win for ARM but a bit of a wash
     // for x86, so match the BUILD file in only enabling this for ARM.
     "-O3",
+    // We need a non-NEON libz.a for the NDK, and cpu_features.c won't build
+    // without this.
+    "-DCPU_NO_SIMD",
 ]
 cflags_arm_neon = [
+    // Undo the -DCPU_NO_SIMD from the generic (non-NEON) ARM flags.
+    "-UCPU_NO_SIMD",
     // We no longer support non-Neon platform builds, but the NDK just has one libz.
     "-DADLER32_SIMD_NEON",
 // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
@@ -69,6 +73,7 @@ cc_defaults {
     srcs: [
         "adler32.c",
         "compress.c",
+        "cpu_features.c",
         "crc32.c",
         "deflate.c",
         "gzclose.c",
