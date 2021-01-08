@@ -33,15 +33,25 @@ cflags_arm_neon = [
 ]
 cflags_arm64 = cflags_arm + cflags_arm_neon
 
+// The *host* x86 configuration (with *lower* CPU feature requirements).
 cflags_x86 = [
     // See ARMV8_OS_LINUX above.
     "-DX86_NOT_WINDOWS",
-    // Android's x86/x86-64 ABI includes SSE2 and SSSE3.
-    "-DADLER32_SIMD_SSSE3",
 // TODO: see arm above.
 //    "-DINFLATE_CHUNK_SIMD_SSE2",
-    // TODO: ...but the host build system defaults don't match our official ABI.
-    "-mssse3",
+    // Android's host CPU feature requirements are *lower* than the
+    // corresponding device CPU feature requirements, so it's easier to just
+    // say "no SIMD for you" rather than specificially disable SSSE3.
+    // We should have a conversation about that, but not until we at least have
+    // data on how many Studio users have CPUs that don't make the grade...
+    // https://issuetracker.google.com/171235570
+    "-DCPU_NO_SIMD",
+]
+// The *device* x86 configuration (with *higher* CPU feature requirements).
+cflags_android_x86 = [
+    // Android's x86/x86-64 ABI includes SSE2 and SSSE3.
+    "-UCPU_NO_SIMD",
+    "-DADLER32_SIMD_SSSE3",
     // PCLMUL isn't in the ABI, but it won't actually be used unless CPUID
     // reports that the processor really does have the instruction.
     "-mpclmul",
@@ -113,6 +123,14 @@ cc_defaults {
         x86_64: {
             cflags: cflags_x86 + cflags_64,
             srcs: srcs_x86,
+        },
+    },
+    target: {
+        android_x86: {
+            cflags: cflags_android_x86,
+        },
+        android_x86_64: {
+            cflags: cflags_android_x86,
         },
     },
 }
