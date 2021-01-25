@@ -65,6 +65,25 @@ srcs_x86 = [
 // This optimization is applicable to arm64 and x86-64.
 cflags_64 = ["-DINFLATE_CHUNK_READ_64LE"]
 
+libz_srcs = [
+    "adler32.c",
+    "compress.c",
+    "cpu_features.c",
+    "crc32.c",
+    "deflate.c",
+    "gzclose.c",
+    "gzlib.c",
+    "gzread.c",
+    "gzwrite.c",
+    "infback.c",
+    "inffast.c",
+    "inflate.c",
+    "inftrees.c",
+    "trees.c",
+    "uncompr.c",
+    "zutil.c",
+]
+
 cc_defaults {
     name: "libz_defaults",
 
@@ -80,24 +99,7 @@ cc_defaults {
     ],
     stl: "none",
     export_include_dirs: ["."],
-    srcs: [
-        "adler32.c",
-        "compress.c",
-        "cpu_features.c",
-        "crc32.c",
-        "deflate.c",
-        "gzclose.c",
-        "gzlib.c",
-        "gzread.c",
-        "gzwrite.c",
-        "infback.c",
-        "inffast.c",
-        "inflate.c",
-        "inftrees.c",
-        "trees.c",
-        "uncompr.c",
-        "zutil.c",
-    ],
+    srcs: libz_srcs,
 
     arch: {
         arm: {
@@ -170,6 +172,34 @@ cc_library {
         ],
         symbol_file: "libz.map.txt",
     },
+}
+
+// A more stable build of libz. Build configuration of this library should be
+// the same for different targets. This is only used by imgdiff.
+
+cc_library {
+    name: "libz_stable",
+    visibility: [
+        "//bootable/recovery/applypatch",
+        "//bootable/recovery/tests",
+    ],
+    cflags: [
+        // We do support hidden visibility, so turn that on.
+        "-DHAVE_HIDDEN",
+        // We do support const, so turn that on.
+        "-DZLIB_CONST",
+        "-Wall",
+        "-Werror",
+        "-Wno-unused",
+        "-Wno-unused-parameter",
+    ],
+    stl: "none",
+    export_include_dirs: ["."],
+    srcs: libz_srcs,
+
+    host_supported: true,
+    vendor_available: true,
+    recovery_available: true,
 }
 
 cc_binary_host {
