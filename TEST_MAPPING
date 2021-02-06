@@ -3,11 +3,6 @@
     {
       "name": "puffin_unittest"
     },
-    // recovery_host_test (imgdiff) relies on zlib for patch generation.
-    {
-      "name": "recovery_host_test",
-      "host": true
-    },
     {
       "name": "recovery_unit_test"
     },
