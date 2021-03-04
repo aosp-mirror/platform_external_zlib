@@ -1,3 +1,19 @@
+package {
+    default_applicable_licenses: ["external_zlib_license"],
+}
+
+license {
+    name: "external_zlib_license",
+    visibility: [":__subpackages__"],
+    license_kinds: [
+        "SPDX-license-identifier-BSD",
+        "SPDX-license-identifier-Zlib",
+    ],
+    license_text: [
+        "LICENSE",
+    ],
+}
+
 srcs_opt = [
     "adler32_simd.c",
     // See https://chromium-review.googlesource.com/749732.
