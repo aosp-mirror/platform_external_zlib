@@ -1,11 +1,5 @@
 licenses(["notice"])
 
-config_setting(
-    name = "windows",
-    values = {"host_cpu": "x64_windows"},
-    visibility = ["//visibility:public"],
-)
-
 exports_files([
     "NOTICE",
 ])
@@ -49,13 +43,10 @@ cc_library(
         "src/zutil.h",
         ":copy_zconf",
     ],
-    copts = select({
-        "windows": [],
-        "//conditions:default": [
-            "-Wno-unused-variable",
-            "-Wno-implicit-function-declaration",
-        ],
-    }),
+    copts = [
+        "-Wno-unused-variable",
+        "-Wno-implicit-function-declaration",
+    ],
     includes = [
         "src",
     ],
