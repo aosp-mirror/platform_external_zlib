@@ -108,6 +108,8 @@ cc_defaults {
         "-DHAVE_HIDDEN",
         // We do support const, so turn that on.
         "-DZLIB_CONST",
+        // Enable -O3 as per chromium.
+        "-O3",
         "-Wall",
         "-Werror",
         "-Wno-unused",
@@ -204,6 +206,8 @@ cc_library {
         "-DHAVE_HIDDEN",
         // We do support const, so turn that on.
         "-DZLIB_CONST",
+        // Enable -O3 as per chromium
+        "-O3",
         "-Wall",
         "-Werror",
         "-Wno-unused",
