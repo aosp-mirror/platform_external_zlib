@@ -1,9 +1,112 @@
+package {
+    default_applicable_licenses: ["external_zlib_license"],
+}
+
+license {
+    name: "external_zlib_license",
+    visibility: [":__subpackages__"],
+    license_kinds: [
+        "SPDX-license-identifier-BSD",
+        "SPDX-license-identifier-Zlib",
+    ],
+    license_text: [
+        "LICENSE",
+    ],
+}
+
+srcs_opt = [
+    "adler32_simd.c",
+    // See https://chromium-review.googlesource.com/749732.
+// TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
+//    "contrib/optimizations/inffast_chunk.c",
+//    "contrib/optimizations/inflate.c",
+    // This file doesn't build for non-neon, so it can't be in the main srcs.
+    "crc32_simd.c",
+]
+
+cflags_arm = [
+    // Since we're building for the platform, we claim to be Linux rather than
+    // Android so we use getauxval() directly instead of the NDK
+    // android_getCpuFeatures which isn't available to us anyway.
+    "-DARMV8_OS_LINUX",
+    // Testing with zlib_bench shows -O3 is a win for ARM but a bit of a wash
+    // for x86, so match the BUILD file in only enabling this for ARM.
+    "-O3",
+    // We need a non-NEON libz.a for the NDK, and cpu_features.c won't build
+    // without this.
+    "-DCPU_NO_SIMD",
+]
+cflags_arm_neon = [
+    // Undo the -DCPU_NO_SIMD from the generic (non-NEON) ARM flags.
+    "-UCPU_NO_SIMD",
+    // We no longer support non-Neon platform builds, but the NDK just has one libz.
+    "-DADLER32_SIMD_NEON",
+// TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
+//    "-DINFLATE_CHUNK_SIMD_NEON",
+    // HWCAP_CRC32 is checked at runtime, so it's okay to turn crc32
+    // acceleration on for both 32- and 64-bit.
+    "-DCRC32_ARMV8_CRC32",
+]
+cflags_arm64 = cflags_arm + cflags_arm_neon
+
+// The *host* x86 configuration (with *lower* CPU feature requirements).
+cflags_x86 = [
+    // See ARMV8_OS_LINUX above.
+    "-DX86_NOT_WINDOWS",
+// TODO: see arm above.
+//    "-DINFLATE_CHUNK_SIMD_SSE2",
+    // Android's host CPU feature requirements are *lower* than the
+    // corresponding device CPU feature requirements, so it's easier to just
+    // say "no SIMD for you" rather than specificially disable SSSE3.
+    // We should have a conversation about that, but not until we at least have
+    // data on how many Studio users have CPUs that don't make the grade...
+    // https://issuetracker.google.com/171235570
+    "-DCPU_NO_SIMD",
+]
+// The *device* x86 configuration (with *higher* CPU feature requirements).
+cflags_android_x86 = [
+    // Android's x86/x86-64 ABI includes SSE2 and SSSE3.
+    "-UCPU_NO_SIMD",
+    "-DADLER32_SIMD_SSSE3",
+    // PCLMUL isn't in the ABI, but it won't actually be used unless CPUID
+    // reports that the processor really does have the instruction.
+    "-mpclmul",
+    "-DCRC32_SIMD_SSE42_PCLMUL",
+]
+srcs_x86 = [
+    "crc_folding.c",
+    "fill_window_sse.c",
+] + srcs_opt
+
+// This optimization is applicable to arm64 and x86-64.
+cflags_64 = ["-DINFLATE_CHUNK_READ_64LE"]
+
+libz_srcs = [
+    "adler32.c",
+    "compress.c",
+    "cpu_features.c",
+    "crc32.c",
+    "deflate.c",
+    "gzclose.c",
+    "gzlib.c",
+    "gzread.c",
+    "gzwrite.c",
+    "infback.c",
+    "inffast.c",
+    "inflate.c",
+    "inftrees.c",
+    "trees.c",
+    "uncompr.c",
+    "zutil.c",
+]
+
 cc_defaults {
     name: "libz_defaults",
 
     cflags: [
-        "-O3",
+        // We do support hidden visibility, so turn that on.
         "-DHAVE_HIDDEN",
+        // We do support const, so turn that on.
         "-DZLIB_CONST",
         "-Wall",
         "-Werror",
@@ -12,36 +115,40 @@ cc_defaults {
     ],
     stl: "none",
     export_include_dirs: ["."],
-    srcs: [
-        "adler32.c",
-        "compress.c",
-        "cpu_features.c",
-        "crc32.c",
-        "deflate.c",
-        "gzclose.c",
-        "gzlib.c",
-        "gzread.c",
-        "gzwrite.c",
-        "infback.c",
-        "inflate.c",
-        "inftrees.c",
-        "inffast.c",
-        "trees.c",
-        "uncompr.c",
-        "zutil.c",
-    ],
+    srcs: libz_srcs,
 
     arch: {
         arm: {
-            // measurements show that the ARM version of ZLib is about x1.17 faster
-            // than the thumb one...
-            // TODO: re-test with zlib_bench after SIMD is enabled.
-            instruction_set: "arm",
-
             // TODO: This is to work around b/24465209. Remove after root cause
             // is fixed.
             pack_relocations: false,
             ldflags: ["-Wl,--hash-style=both"],
+
+            cflags: cflags_arm,
+            neon: {
+                cflags: cflags_arm_neon,
+                srcs: srcs_opt,
+            }
+        },
+        arm64: {
+            cflags: cflags_arm64 + cflags_64,
+            srcs: srcs_opt,
+        },
+        x86: {
+            cflags: cflags_x86,
+            srcs: srcs_x86,
+        },
+        x86_64: {
+            cflags: cflags_x86 + cflags_64,
+            srcs: srcs_x86,
+        },
+    },
+    target: {
+        android_x86: {
+            cflags: cflags_android_x86,
+        },
+        android_x86_64: {
+            cflags: cflags_android_x86,
         },
     },
 }
@@ -55,11 +162,13 @@ cc_library {
     static_ndk_lib: true,
 
     vendor_available: true,
+    product_available: true,
     vndk: {
         enabled: true,
         support_system_process: true,
     },
     ramdisk_available: true,
+    vendor_ramdisk_available: true,
     recovery_available: true,
     native_bridge_supported: true,
 
@@ -72,19 +181,41 @@ cc_library {
         },
     },
 
-// TODO(b/155456180): make libz a stub-providing library by uncommenting below
-//    stubs: {
-//        versions: ["29", "30"],
-//        symbol_file: "libz.map.txt",
-//    },
+    stubs: {
+        versions: [
+            "29",
+            "30",
+        ],
+        symbol_file: "libz.map.txt",
+    },
+}
 
-    apex_available: [
-        "//apex_available:platform",
-        "com.android.art.debug", // from libdexfile
-        "com.android.art.release",
-        "com.android.bluetooth.updatable",
-        "com.android.runtime",
+// A more stable build of libz. Build configuration of this library should be
+// the same for different targets. This is only used by imgdiff.
+
+cc_library {
+    name: "libz_stable",
+    visibility: [
+        "//bootable/recovery/applypatch",
+        "//bootable/recovery/tests",
     ],
+    cflags: [
+        // We do support hidden visibility, so turn that on.
+        "-DHAVE_HIDDEN",
+        // We do support const, so turn that on.
+        "-DZLIB_CONST",
+        "-Wall",
+        "-Werror",
+        "-Wno-unused",
+        "-Wno-unused-parameter",
+    ],
+    stl: "none",
+    export_include_dirs: ["."],
+    srcs: libz_srcs,
+
+    host_supported: true,
+    vendor_available: true,
+    recovery_available: true,
 }
 
 cc_binary_host {
@@ -101,41 +232,40 @@ cc_binary {
     cflags: ["-Wall", "-Werror"],
     host_supported: true,
     shared_libs: ["libz"],
+    // We build zlib_bench32 and zlib_bench64 so it's easy to test LP32.
+    compile_multilib: "both",
+    multilib: {
+        lib32: { suffix: "32", },
+        lib64: { suffix: "64", },
+    },
 }
 
-// This module is defined in development/ndk/Android.bp. Updating these headers
-// to be usable for any API level is going to be some work (at the very least,
-// there's a ZLIB_VERNUM that will need to be handled since early versions of
-// Android did not have all the APIs that calling code will use if this is set
-// to the current value.
-//
-// The NDK never updated the zlib headers when the platform updated, so until we
-// solve this the NDK will continue shipping the old headers.
-//
-// ndk_headers {
-//     name: "libz_headers",
-//     from: "src",
-//     to: "",
-//     srcs: [
-//         "src/zconf.h",
-//         "src/zlib.h",
-//     ],
-//     license: "NOTICE",
-// }
-
-// TODO(b/155351357) remove this library and let libtextclassifier to use libz
-// instead.
-// libz_current allows modules building against the NDK to have access to zlib
-// API that's not available from the NDK libz.
-cc_library_static {
-    name: "libz_current",
-    defaults: ["libz_defaults"],
-    sdk_version: "current",
-
-    apex_available: [
-        "//apex_available:platform", // indirectly from GoogleExtServices that gets installed to /system
-        "com.android.extservices", // indirectly via libtextclassifier
+cc_test {
+    name: "zlib_tests",
+    srcs: [
+        "contrib/tests/infcover.cc",
+        "contrib/tests/utils_unittest.cc",
+        "google/compression_utils_portable.cc",
     ],
+    include_dirs: [
+        "external/zlib/google",
+        // These tests include "gtest.h" rather than the usual "gtest/gtest.h".
+        "external/googletest/googletest/include/gtest/",
+    ],
+    shared_libs: ["libz"],
+    host_supported: true,
+    test_suites: ["device-tests"],
+}
+
+ndk_headers {
+    name: "libz_headers",
+    from: "",
+    to: "",
+    srcs: [
+        "zconf.h",
+        "zlib.h",
+    ],
+    license: "LICENSE",
 }
 
 ndk_library {
