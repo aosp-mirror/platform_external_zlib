@@ -5,10 +5,12 @@
 #include "third_party/zlib/google/zip_internal.h"
 
 #include <stddef.h>
+#include <string.h>
 
 #include <algorithm>
 
 #include "base/logging.h"
+#include "base/notreached.h"
 #include "base/strings/utf_string_conversions.h"
 
 #if defined(USE_SYSTEM_MINIZIP)
@@ -54,10 +56,10 @@ void* ZipOpenFunc(void *opaque, const char* filename, int mode) {
     creation_disposition = CREATE_ALWAYS;
   }
 
-  base::string16 filename16 = base::UTF8ToUTF16(filename);
+  std::wstring filenamew = base::UTF8ToWide(filename);
   if ((filename != NULL) && (desired_access != 0)) {
-    file = CreateFile(filename16.c_str(), desired_access, share_mode,
-        NULL, creation_disposition, flags_and_attributes, NULL);
+    file = CreateFile(filenamew.c_str(), desired_access, share_mode, NULL,
+                      creation_disposition, flags_and_attributes, NULL);
   }
 
   if (file == INVALID_HANDLE_VALUE)
