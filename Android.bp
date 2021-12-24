@@ -207,8 +207,6 @@ cc_library {
         ],
         symbol_file: "libz.map.txt",
     },
-    min_sdk_version: "30",
-    sdk_version: "current", /* TODO(b211800738): This needs to change to Tiramisu */
 }
 
 // A more stable build of libz. Build configuration of this library should be
