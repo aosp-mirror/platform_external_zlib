@@ -15,7 +15,7 @@
  * Note this code can be compiled outside of the Chromium build system against
  * the system zlib (-lz) with g++ or clang++ as follows:
  *
- *   g++|clang++ -O3 -Wall -std=c++11 zlib_bench.cc -lstdc++ -lz
+ *   g++|clang++ -O3 -Wall -std=c++11 -lstdc++ -lz zlib_bench.cc
  */
 
 #include <algorithm>
@@ -38,7 +38,7 @@ void error_exit(const char* error, int code) {
 }
 
 inline char* string_data(std::string* s) {
-  return s->empty() ? nullptr : &*s->begin();
+  return s->empty() ? 0 : &*s->begin();
 }
 
 struct Data {
@@ -99,25 +99,10 @@ const char* zlib_wrapper_name(zlib_wrapper type) {
   if (type == kWrapperZRAW)
     return "RAW";
   error_exit("bad wrapper type", int(type));
-  return nullptr;
+  return 0;
 }
 
-static int zlib_strategy = Z_DEFAULT_STRATEGY;
-
-const char* zlib_level_strategy_name(int compression_level) {
-  if (compression_level == 0)
-    return "";  // strategy is meaningless at level 0
-  if (zlib_strategy == Z_HUFFMAN_ONLY)
-    return "huffman ";
-  if (zlib_strategy == Z_RLE)
-    return "rle ";
-  if (zlib_strategy == Z_DEFAULT_STRATEGY)
-    return "";
-  error_exit("bad strategy", zlib_strategy);
-  return nullptr;
-}
-
-static int zlib_compression_level = Z_DEFAULT_COMPRESSION;
+static int zlib_compression_level;
 
 void zlib_compress(
     const zlib_wrapper type,
@@ -134,7 +119,7 @@ void zlib_compress(
   memset(&stream, 0, sizeof(stream));
 
   int result = deflateInit2(&stream, zlib_compression_level, Z_DEFLATED,
-      zlib_stream_wrapper_type(type), MAX_MEM_LEVEL, zlib_strategy);
+      zlib_stream_wrapper_type(type), MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
   if (result != Z_OK)
     error_exit("deflateInit2 failed", result);
 
@@ -200,12 +185,7 @@ void zlib_file(const char* name, const zlib_wrapper type) {
   const auto file = read_file_data_or_exit(name);
   const int length = static_cast<int>(file.size);
   const char* data = file.data.get();
-
-  /*
-   * Report compression strategy and file name.
-   */
-  const char* strategy = zlib_level_strategy_name(zlib_compression_level);
-  printf("%s%-40s :\n", strategy, name);
+  printf("%-40s :\n", name);
 
   /*
    * Chop the data into blocks.
@@ -296,20 +276,18 @@ static int argn = 1;
 
 char* get_option(int argc, char* argv[], const char* option) {
   if (argn < argc)
-    return !strcmp(argv[argn], option) ? argv[argn++] : nullptr;
-  return nullptr;
+    return !strcmp(argv[argn], option) ? argv[argn++] : 0;
+  return 0;
 }
 
 bool get_compression(int argc, char* argv[], int* value) {
   if (argn < argc)
-    *value = isdigit(argv[argn][0]) ? atoi(argv[argn++]) : -1;
-  return *value >= 0 && *value <= 9;
+    *value = atoi(argv[argn++]);
+  return *value >= 1 && *value <= 9;
 }
 
-const char* options = "gzip|zlib|raw [--compression 0:9] [--huffman|--rle]";
-
 void usage_exit(const char* program) {
-  printf("usage: %s %s files...", program, options);
+  printf("usage: %s gzip|zlib|raw [--compression 1:9] files...\n", program);
   exit(1);
 }
 
@@ -324,18 +302,10 @@ int main(int argc, char* argv[]) {
   else
     usage_exit(argv[0]);
 
-  while (argn < argc && argv[argn][0] == '-') {
-    if (get_option(argc, argv, "--compression")) {
-      if (!get_compression(argc, argv, &zlib_compression_level))
-        usage_exit(argv[0]);
-    } else if (get_option(argc, argv, "--huffman")) {
-      zlib_strategy = Z_HUFFMAN_ONLY;
-    } else if (get_option(argc, argv, "--rle")) {
-      zlib_strategy = Z_RLE;
-    } else {
-      usage_exit(argv[0]);
-    }
-  }
+  if (!get_option(argc, argv, "--compression"))
+    zlib_compression_level = Z_DEFAULT_COMPRESSION;
+  else if (!get_compression(argc, argv, &zlib_compression_level))
+    usage_exit(argv[0]);
 
   if (argn >= argc)
     usage_exit(argv[0]);
