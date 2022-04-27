@@ -257,6 +257,7 @@ cc_binary {
     cflags: [
         "-Wall",
         "-Werror",
+        "-Wno-unused-parameter",
     ],
     host_supported: true,
     shared_libs: ["libz"],
