@@ -257,6 +257,7 @@ cc_binary {
     cflags: [
         "-Wall",
         "-Werror",
+        "-Wno-unused-parameter",
     ],
     host_supported: true,
     shared_libs: ["libz"],
@@ -305,4 +306,31 @@ ndk_library {
     symbol_file: "libz.map.txt",
     first_version: "9",
     unversioned_until: "current",
+}
+
+// Export zlib headers for inclusion in the musl sysroot.
+genrule {
+    name: "libc_musl_sysroot_zlib_headers",
+    visibility: ["//external/musl"],
+    srcs: [
+        "LICENSE",
+        "zconf.h",
+        "zlib.h",
+    ],
+    out: ["libc_musl_sysroot_zlib_headers.zip"],
+    tools: [
+        "soong_zip",
+        "zip2zip",
+    ],
+    cmd: "$(location soong_zip) -o $(genDir)/sysroot.zip -symlinks=false" +
+        // NOTICE
+        " -j -f $(location LICENSE) " +
+        // headers
+        " -j -P include " +
+        "  -f $(location zconf.h) " +
+        "  -f $(location zlib.h) " +
+        " && " +
+        "$(location zip2zip) -i $(genDir)/sysroot.zip -o $(out) " +
+        " include/**/*:include " +
+        " LICENSE:NOTICE.zlib",
 }
