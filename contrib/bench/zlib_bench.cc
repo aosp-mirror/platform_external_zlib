@@ -193,7 +193,7 @@ void verify_equal(const char* input, size_t size, std::string* output) {
   exit(3);
 }
 
-void zlib_file(const char* name, const zlib_wrapper type, int width) {
+void zlib_file(const char* name, const zlib_wrapper type) {
   /*
    * Read the file data.
    */
@@ -283,9 +283,9 @@ void zlib_file(const char* name, const zlib_wrapper type, int width) {
   double inflate_rate_max = length * repeats / mega_byte / utime[0];
 
   // type, block size, compression ratio, etc
-  printf("%s: [b %dM] bytes %*d -> %*u %4.2f%%",
-    zlib_wrapper_name(type), block_size / (1 << 20), width, length, width,
-    unsigned(output_length), output_length * 100.0 / length);
+  printf("%s: [b %dM] bytes %6d -> %6u %4.1f%%",
+    zlib_wrapper_name(type), block_size / (1 << 20), length,
+    static_cast<unsigned>(output_length), output_length * 100.0 / length);
 
   // compress / uncompress median (max) rates
   printf(" comp %5.1f (%5.1f) MB/s uncomp %5.1f (%5.1f) MB/s\n",
@@ -300,20 +300,16 @@ char* get_option(int argc, char* argv[], const char* option) {
   return nullptr;
 }
 
-bool get_compression(int argc, char* argv[], int& value) {
+bool get_compression(int argc, char* argv[], int* value) {
   if (argn < argc)
-    value = isdigit(argv[argn][0]) ? atoi(argv[argn++]) : -1;
-  return value >= 0 && value <= 9;
+    *value = isdigit(argv[argn][0]) ? atoi(argv[argn++]) : -1;
+  return *value >= 0 && *value <= 9;
 }
 
-void get_field_width(int argc, char* argv[], int& value) {
-  value = atoi(argv[argn++]);
-}
+const char* options = "gzip|zlib|raw [--compression 0:9] [--huffman|--rle]";
 
 void usage_exit(const char* program) {
-  static auto* options =
-    "gzip|zlib|raw [--compression 0:9] [--huffman|--rle] [--field width]";
-  printf("usage: %s %s files ...\n", program, options);
+  printf("usage: %s %s files...", program, options);
   exit(1);
 }
 
@@ -328,14 +324,10 @@ int main(int argc, char* argv[]) {
   else
     usage_exit(argv[0]);
 
-  int file_size_field_width = 0;
-
   while (argn < argc && argv[argn][0] == '-') {
     if (get_option(argc, argv, "--compression")) {
-      if (!get_compression(argc, argv, zlib_compression_level))
+      if (!get_compression(argc, argv, &zlib_compression_level))
         usage_exit(argv[0]);
-    } else if (get_option(argc, argv, "--field")) {
-      get_field_width(argc, argv, file_size_field_width);
     } else if (get_option(argc, argv, "--huffman")) {
       zlib_strategy = Z_HUFFMAN_ONLY;
     } else if (get_option(argc, argv, "--rle")) {
@@ -347,11 +339,8 @@ int main(int argc, char* argv[]) {
 
   if (argn >= argc)
     usage_exit(argv[0]);
-
-  if (file_size_field_width < 6)
-    file_size_field_width = 6;
   while (argn < argc)
-    zlib_file(argv[argn++], type, file_size_field_width);
+    zlib_file(argv[argn++], type);
 
   return 0;
 }

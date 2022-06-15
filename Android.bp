@@ -17,14 +17,18 @@ license {
 srcs_opt = [
     "adler32_simd.c",
     // See https://chromium-review.googlesource.com/749732.
-    // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
-    //    "contrib/optimizations/inffast_chunk.c",
-    //    "contrib/optimizations/inflate.c",
+// TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
+//    "contrib/optimizations/inffast_chunk.c",
+//    "contrib/optimizations/inflate.c",
     // This file doesn't build for non-neon, so it can't be in the main srcs.
     "crc32_simd.c",
 ]
 
 cflags_arm = [
+    // Since we're building for the platform, we claim to be Linux rather than
+    // Android so we use getauxval() directly instead of the NDK
+    // android_getCpuFeatures which isn't available to us anyway.
+    "-DARMV8_OS_LINUX",
     // Testing with zlib_bench shows -O3 is a win for ARM but a bit of a wash
     // for x86, so match the BUILD file in only enabling this for ARM.
     "-O3",
@@ -37,8 +41,8 @@ cflags_arm_neon = [
     "-UCPU_NO_SIMD",
     // We no longer support non-Neon platform builds, but the NDK just has one libz.
     "-DADLER32_SIMD_NEON",
-    // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
-    //    "-DINFLATE_CHUNK_SIMD_NEON",
+// TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
+//    "-DINFLATE_CHUNK_SIMD_NEON",
     // HWCAP_CRC32 is checked at runtime, so it's okay to turn crc32
     // acceleration on for both 32- and 64-bit.
     "-DCRC32_ARMV8_CRC32",
@@ -49,8 +53,8 @@ cflags_arm64 = cflags_arm + cflags_arm_neon
 cflags_x86 = [
     // See ARMV8_OS_LINUX above.
     "-DX86_NOT_WINDOWS",
-    // TODO: see arm above.
-    //    "-DINFLATE_CHUNK_SIMD_SSE2",
+// TODO: see arm above.
+//    "-DINFLATE_CHUNK_SIMD_SSE2",
     // Android's host CPU feature requirements are *lower* than the
     // corresponding device CPU feature requirements, so it's easier to just
     // say "no SIMD for you" rather than specificially disable SSSE3.
@@ -104,8 +108,6 @@ cc_defaults {
         "-DHAVE_HIDDEN",
         // We do support const, so turn that on.
         "-DZLIB_CONST",
-        // Enable -O3 as per chromium.
-        "-O3",
         "-Wall",
         "-Werror",
         "-Wno-unused",
@@ -126,7 +128,7 @@ cc_defaults {
             neon: {
                 cflags: cflags_arm_neon,
                 srcs: srcs_opt,
-            },
+            }
         },
         arm64: {
             cflags: cflags_arm64 + cflags_64,
@@ -142,32 +144,11 @@ cc_defaults {
         },
     },
     target: {
-        android_arm: {
-            cflags: [
-                // Since we're building for the platform, we claim to be Linux rather than
-                // Android so we use getauxval() directly instead of the NDK
-                // android_getCpuFeatures which isn't available to us anyway.
-                "-DARMV8_OS_LINUX",
-            ],
-        },
         android_x86: {
             cflags: cflags_android_x86,
         },
         android_x86_64: {
             cflags: cflags_android_x86,
-        },
-        darwin_arm64: {
-            cflags: [
-                "-DARMV8_OS_MACOS",
-            ],
-        },
-        linux_arm64: {
-            cflags: [
-                // Since we're building for the platform, we claim to be Linux rather than
-                // Android so we use getauxval() directly instead of the NDK
-                // android_getCpuFeatures which isn't available to us anyway.
-                "-DARMV8_OS_LINUX",
-            ],
         },
     },
 }
@@ -223,8 +204,6 @@ cc_library {
         "-DHAVE_HIDDEN",
         // We do support const, so turn that on.
         "-DZLIB_CONST",
-        // Enable -O3 as per chromium
-        "-O3",
         "-Wall",
         "-Werror",
         "-Wno-unused",
@@ -242,11 +221,7 @@ cc_library {
 cc_binary_host {
     name: "minigzip",
     srcs: ["contrib/minigzip/minigzip.c"],
-    cflags: [
-        "-Wall",
-        "-Werror",
-        "-DUSE_MMAP",
-    ],
+    cflags: ["-Wall", "-Werror", "-DUSE_MMAP"],
     static_libs: ["libz"],
     stl: "none",
 }
@@ -254,22 +229,14 @@ cc_binary_host {
 cc_binary {
     name: "zlib_bench",
     srcs: ["contrib/bench/zlib_bench.cc"],
-    cflags: [
-        "-Wall",
-        "-Werror",
-        "-Wno-unused-parameter",
-    ],
+    cflags: ["-Wall", "-Werror"],
     host_supported: true,
     shared_libs: ["libz"],
     // We build zlib_bench32 and zlib_bench64 so it's easy to test LP32.
     compile_multilib: "both",
     multilib: {
-        lib32: {
-            suffix: "32",
-        },
-        lib64: {
-            suffix: "64",
-        },
+        lib32: { suffix: "32", },
+        lib64: { suffix: "64", },
     },
 }
 
