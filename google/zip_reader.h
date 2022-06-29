@@ -85,6 +85,9 @@ class ZipReader {
   // A callback that is called periodically during the operation with the number
   // of bytes that have been processed so far.
   using ProgressCallback = base::RepeatingCallback<void(int64_t)>;
+  // A callback that is called periodically during the operation with the number
+  // of bytes that have been processed since the previous call (i.e. delta).
+  using ListenerCallback = base::RepeatingCallback<void(uint64_t)>;
 
   // Information of an entry (file or directory) in a ZIP archive.
   struct Entry {
@@ -94,9 +97,14 @@ class ZipReader {
     // if it wants to interpret this path correctly.
     std::string path_in_original_encoding;
 
-    // Path of the entry, converted to Unicode. This path is usually relative
-    // (eg "foo/bar.txt"), but it can also be absolute (eg "/foo/bar.txt") or
-    // parent-relative (eg "../foo/bar.txt"). See also |is_unsafe|.
+    // Path of the entry, converted to Unicode. This path is relative (eg
+    // "foo/bar.txt"). Absolute paths (eg "/foo/bar.txt") or paths containing
+    // ".." or "." components (eg "../foo/bar.txt") are converted to safe
+    // relative paths. Eg:
+    // (In ZIP) -> (Entry.path)
+    // /foo/bar -> ROOT/foo/bar
+    // ../a     -> UP/a
+    // ./a      -> DOT/a
     base::FilePath path;
 
     // Size of the original uncompressed file, or 0 if the entry is a directory.
@@ -122,8 +130,8 @@ class ZipReader {
     // False if the entry is a file.
     bool is_directory;
 
-    // True if the entry path is considered unsafe, ie if it is absolute or if
-    // it contains "..".
+    // True if the entry path cannot be converted to a safe relative path. This
+    // happens if a file entry (not a directory) has a filename "." or "..".
     bool is_unsafe;
 
     // True if the file content is encrypted.
@@ -200,6 +208,17 @@ class ZipReader {
                            uint64_t num_bytes_to_extract =
                                std::numeric_limits<uint64_t>::max()) const;
 
+  // Extracts the current entry to |delegate|, starting from the beginning
+  // of the entry, calling |listener_callback| regularly with the number of
+  // bytes extracted.
+  //
+  // Returns true if the entire file was extracted without error.
+  //
+  // Precondition: Next() returned a non-null Entry.
+  bool ExtractCurrentEntryWithListener(
+      WriterDelegate* delegate,
+      ListenerCallback listener_callback) const;
+
   // Asynchronously extracts the current entry to the given output file path. If
   // the current entry is a directory it just creates the directory
   // synchronously instead.
@@ -257,6 +276,25 @@ class ZipReader {
   // reset automatically as needed.
   bool OpenEntry();
 
+  // Normalizes the given path passed as UTF-16 string piece. Sets entry_.path,
+  // entry_.is_directory and entry_.is_unsafe.
+  void Normalize(base::StringPiece16 in);
+
+  // Runs the ListenerCallback at a throttled rate.
+  void ReportProgress(ListenerCallback listener_callback, uint64_t bytes) const;
+
+  // Extracts |num_bytes_to_extract| bytes of the current entry to |delegate|,
+  // starting from the beginning of the entry calling |listener_callback| if
+  // its supplied.
+  //
+  // Returns true if the entire file was extracted without error.
+  //
+  // Precondition: Next() returned a non-null Entry.
+  bool ExtractCurrentEntry(WriterDelegate* delegate,
+                           ListenerCallback listener_callback,
+                           uint64_t num_bytes_to_extract =
+                               std::numeric_limits<uint64_t>::max()) const;
+
   // Extracts a chunk of the file to the target.  Will post a task for the next
   // chunk and success/failure/progress callbacks as necessary.
   void ExtractChunk(base::File target_file,
@@ -274,11 +312,21 @@ class ZipReader {
   bool ok_;
   Entry entry_;
 
+  // Next time to report progress.
+  mutable base::TimeTicks next_progress_report_time_ = base::TimeTicks::Now();
+
+  // Progress time delta.
+  // TODO(crbug.com/953256) Add this as parameter to the unzip options.
+  base::TimeDelta progress_period_ = base::Milliseconds(1000);
+
+  // Number of bytes read since last progress report callback executed.
+  mutable uint64_t delta_bytes_read_ = 0;
+
   base::WeakPtrFactory<ZipReader> weak_ptr_factory_{this};
 };
 
-// A writer delegate that writes to a given File. This file is expected to be
-// initially empty.
+// A writer delegate that writes to a given File. It is recommended that this
+// file be initially empty.
 class FileWriterDelegate : public WriterDelegate {
  public:
   // Constructs a FileWriterDelegate that manipulates |file|. The delegate will

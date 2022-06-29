@@ -22,6 +22,7 @@ srcs_opt = [
     //    "contrib/optimizations/inflate.c",
     // This file doesn't build for non-neon, so it can't be in the main srcs.
     "crc32_simd.c",
+    "crc_folding.c",
 ]
 
 cflags_arm = [
@@ -64,15 +65,7 @@ cflags_android_x86 = [
     // Android's x86/x86-64 ABI includes SSE2 and SSSE3.
     "-UCPU_NO_SIMD",
     "-DADLER32_SIMD_SSSE3",
-    // PCLMUL isn't in the ABI, but it won't actually be used unless CPUID
-    // reports that the processor really does have the instruction.
-    "-mpclmul",
-    "-DCRC32_SIMD_SSE42_PCLMUL",
 ]
-srcs_x86 = [
-    "crc_folding.c",
-    "fill_window_sse.c",
-] + srcs_opt
 
 // This optimization is applicable to arm64 and x86-64.
 cflags_64 = ["-DINFLATE_CHUNK_READ_64LE"]
@@ -134,11 +127,11 @@ cc_defaults {
         },
         x86: {
             cflags: cflags_x86,
-            srcs: srcs_x86,
+            srcs: srcs_opt,
         },
         x86_64: {
             cflags: cflags_x86 + cflags_64,
-            srcs: srcs_x86,
+            srcs: srcs_opt,
         },
     },
     target: {
