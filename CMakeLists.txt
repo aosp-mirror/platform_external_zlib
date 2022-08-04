@@ -24,7 +24,6 @@ add_library(libz STATIC
   adler32_simd.c
   crc32_simd.c
   crc_folding.c
-  fill_window_sse.c
 
   # Common sources
   adler32.c
