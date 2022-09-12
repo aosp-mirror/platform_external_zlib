@@ -303,6 +303,9 @@ ndk_library {
     symbol_file: "libz.map.txt",
     first_version: "9",
     unversioned_until: "current",
+    export_header_libs: [
+        "libz_headers",
+    ],
 }
 
 // Export zlib headers for inclusion in the musl sysroot.
