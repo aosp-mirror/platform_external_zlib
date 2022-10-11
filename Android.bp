@@ -277,6 +277,9 @@ cc_test {
         "contrib/tests/utils_unittest.cc",
         "google/compression_utils_portable.cc",
     ],
+    cflags: [
+        "-Wno-unused-parameter",
+    ],
     include_dirs: [
         "external/zlib/google",
         // These tests include "gtest.h" rather than the usual "gtest/gtest.h".
