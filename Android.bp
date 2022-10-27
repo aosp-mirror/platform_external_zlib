@@ -14,28 +14,10 @@ license {
     ],
 }
 
-srcs_opt = [
-    "adler32_simd.c",
-    // See https://chromium-review.googlesource.com/749732.
-    // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
-    //    "contrib/optimizations/inffast_chunk.c",
-    //    "contrib/optimizations/inflate.c",
-    // This file doesn't build for non-neon, so it can't be in the main srcs.
-    "crc32_simd.c",
-    "crc_folding.c",
-]
-
 cflags_arm = [
     // Testing with zlib_bench shows -O3 is a win for ARM but a bit of a wash
     // for x86, so match the BUILD file in only enabling this for ARM.
     "-O3",
-    // We need a non-NEON libz.a for the NDK, and cpu_features.c won't build
-    // without this.
-    "-DCPU_NO_SIMD",
-]
-cflags_arm_neon = [
-    // Undo the -DCPU_NO_SIMD from the generic (non-NEON) ARM flags.
-    "-UCPU_NO_SIMD",
     // We no longer support non-Neon platform builds, but the NDK just has one libz.
     "-DADLER32_SIMD_NEON",
     // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
@@ -44,7 +26,7 @@ cflags_arm_neon = [
     // acceleration on for both 32- and 64-bit.
     "-DCRC32_ARMV8_CRC32",
 ]
-cflags_arm64 = cflags_arm + cflags_arm_neon
+cflags_arm64 = cflags_arm
 
 // The *host* x86 configuration (with *lower* CPU feature requirements).
 cflags_x86 = [
@@ -72,9 +54,12 @@ cflags_64 = ["-DINFLATE_CHUNK_READ_64LE"]
 
 libz_srcs = [
     "adler32.c",
+    "adler32_simd.c",
     "compress.c",
     "cpu_features.c",
     "crc32.c",
+    "crc32_simd.c",
+    "crc_folding.c",
     "deflate.c",
     "gzclose.c",
     "gzlib.c",
@@ -87,6 +72,12 @@ libz_srcs = [
     "trees.c",
     "uncompr.c",
     "zutil.c",
+
+    // Not-yet-enabled optimizations.
+    // See https://chromium-review.googlesource.com/749732.
+    // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
+    //    "contrib/optimizations/inffast_chunk.c",
+    //    "contrib/optimizations/inflate.c",
 ]
 
 cc_defaults {
@@ -117,22 +108,15 @@ cc_defaults {
             ldflags: ["-Wl,--hash-style=both"],
 
             cflags: cflags_arm,
-            neon: {
-                cflags: cflags_arm_neon,
-                srcs: srcs_opt,
-            },
         },
         arm64: {
             cflags: cflags_arm64 + cflags_64,
-            srcs: srcs_opt,
         },
         x86: {
             cflags: cflags_x86,
-            srcs: srcs_opt,
         },
         x86_64: {
             cflags: cflags_x86 + cflags_64,
-            srcs: srcs_opt,
         },
     },
     target: {
