@@ -321,3 +321,36 @@ genrule {
         " include/**/*:include " +
         " LICENSE:NOTICE.zlib",
 }
+
+cc_defaults {
+    name: "zlib_fuzz_defaults",
+    static_libs: ["libz"],
+    host_supported: true,
+}
+
+cc_fuzz {
+    name: "zlib_uncompress_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/uncompress_fuzzer.cc"],
+}
+
+cc_fuzz {
+    name: "zlib_streaming_inflate_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/streaming_inflate_fuzzer.cc"],
+    fuzz_config: {
+        libfuzzer_options: ["max_len=256000"],
+    }
+}
+
+cc_fuzz {
+    name: "zlib_deflate_set_dictionary_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/deflate_set_dictionary_fuzzer.cc"],
+}
+
+cc_fuzz {
+    name: "zlib_deflate_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/deflate_fuzzer.cc"],
+}
