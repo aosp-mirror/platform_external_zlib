@@ -14,27 +14,10 @@ license {
     ],
 }
 
-srcs_opt = [
-    "adler32_simd.c",
-    // See https://chromium-review.googlesource.com/749732.
-    // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
-    //    "contrib/optimizations/inffast_chunk.c",
-    //    "contrib/optimizations/inflate.c",
-    // This file doesn't build for non-neon, so it can't be in the main srcs.
-    "crc32_simd.c",
-]
-
 cflags_arm = [
     // Testing with zlib_bench shows -O3 is a win for ARM but a bit of a wash
     // for x86, so match the BUILD file in only enabling this for ARM.
     "-O3",
-    // We need a non-NEON libz.a for the NDK, and cpu_features.c won't build
-    // without this.
-    "-DCPU_NO_SIMD",
-]
-cflags_arm_neon = [
-    // Undo the -DCPU_NO_SIMD from the generic (non-NEON) ARM flags.
-    "-UCPU_NO_SIMD",
     // We no longer support non-Neon platform builds, but the NDK just has one libz.
     "-DADLER32_SIMD_NEON",
     // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
@@ -43,7 +26,7 @@ cflags_arm_neon = [
     // acceleration on for both 32- and 64-bit.
     "-DCRC32_ARMV8_CRC32",
 ]
-cflags_arm64 = cflags_arm + cflags_arm_neon
+cflags_arm64 = cflags_arm
 
 // The *host* x86 configuration (with *lower* CPU feature requirements).
 cflags_x86 = [
@@ -64,24 +47,19 @@ cflags_android_x86 = [
     // Android's x86/x86-64 ABI includes SSE2 and SSSE3.
     "-UCPU_NO_SIMD",
     "-DADLER32_SIMD_SSSE3",
-    // PCLMUL isn't in the ABI, but it won't actually be used unless CPUID
-    // reports that the processor really does have the instruction.
-    "-mpclmul",
-    "-DCRC32_SIMD_SSE42_PCLMUL",
 ]
-srcs_x86 = [
-    "crc_folding.c",
-    "fill_window_sse.c",
-] + srcs_opt
 
 // This optimization is applicable to arm64 and x86-64.
 cflags_64 = ["-DINFLATE_CHUNK_READ_64LE"]
 
 libz_srcs = [
     "adler32.c",
+    "adler32_simd.c",
     "compress.c",
     "cpu_features.c",
     "crc32.c",
+    "crc32_simd.c",
+    "crc_folding.c",
     "deflate.c",
     "gzclose.c",
     "gzlib.c",
@@ -94,6 +72,12 @@ libz_srcs = [
     "trees.c",
     "uncompr.c",
     "zutil.c",
+
+    // Not-yet-enabled optimizations.
+    // See https://chromium-review.googlesource.com/749732.
+    // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
+    //    "contrib/optimizations/inffast_chunk.c",
+    //    "contrib/optimizations/inflate.c",
 ]
 
 cc_defaults {
@@ -108,6 +92,7 @@ cc_defaults {
         "-O3",
         "-Wall",
         "-Werror",
+        "-Wno-deprecated-non-prototype",
         "-Wno-unused",
         "-Wno-unused-parameter",
     ],
@@ -123,22 +108,15 @@ cc_defaults {
             ldflags: ["-Wl,--hash-style=both"],
 
             cflags: cflags_arm,
-            neon: {
-                cflags: cflags_arm_neon,
-                srcs: srcs_opt,
-            },
         },
         arm64: {
             cflags: cflags_arm64 + cflags_64,
-            srcs: srcs_opt,
         },
         x86: {
             cflags: cflags_x86,
-            srcs: srcs_x86,
         },
         x86_64: {
             cflags: cflags_x86 + cflags_64,
-            srcs: srcs_x86,
         },
     },
     target: {
@@ -227,6 +205,7 @@ cc_library {
         "-O3",
         "-Wall",
         "-Werror",
+        "-Wno-deprecated-non-prototype",
         "-Wno-unused",
         "-Wno-unused-parameter",
     ],
@@ -246,6 +225,7 @@ cc_binary_host {
         "-Wall",
         "-Werror",
         "-DUSE_MMAP",
+        "-Wno-deprecated-non-prototype",
     ],
     static_libs: ["libz"],
     stl: "none",
@@ -257,6 +237,7 @@ cc_binary {
     cflags: [
         "-Wall",
         "-Werror",
+        "-Wno-deprecated-non-prototype",
         "-Wno-unused-parameter",
     ],
     host_supported: true,
@@ -279,6 +260,9 @@ cc_test {
         "contrib/tests/infcover.cc",
         "contrib/tests/utils_unittest.cc",
         "google/compression_utils_portable.cc",
+    ],
+    cflags: [
+        "-Wno-unused-parameter",
     ],
     include_dirs: [
         "external/zlib/google",
@@ -306,4 +290,67 @@ ndk_library {
     symbol_file: "libz.map.txt",
     first_version: "9",
     unversioned_until: "current",
+    export_header_libs: [
+        "libz_headers",
+    ],
+}
+
+// Export zlib headers for inclusion in the musl sysroot.
+genrule {
+    name: "libc_musl_sysroot_zlib_headers",
+    visibility: ["//external/musl"],
+    srcs: [
+        "LICENSE",
+        "zconf.h",
+        "zlib.h",
+    ],
+    out: ["libc_musl_sysroot_zlib_headers.zip"],
+    tools: [
+        "soong_zip",
+        "zip2zip",
+    ],
+    cmd: "$(location soong_zip) -o $(genDir)/sysroot.zip -symlinks=false" +
+        // NOTICE
+        " -j -f $(location LICENSE) " +
+        // headers
+        " -j -P include " +
+        "  -f $(location zconf.h) " +
+        "  -f $(location zlib.h) " +
+        " && " +
+        "$(location zip2zip) -i $(genDir)/sysroot.zip -o $(out) " +
+        " include/**/*:include " +
+        " LICENSE:NOTICE.zlib",
+}
+
+cc_defaults {
+    name: "zlib_fuzz_defaults",
+    static_libs: ["libz"],
+    host_supported: true,
+}
+
+cc_fuzz {
+    name: "zlib_uncompress_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/uncompress_fuzzer.cc"],
+}
+
+cc_fuzz {
+    name: "zlib_streaming_inflate_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/streaming_inflate_fuzzer.cc"],
+    fuzz_config: {
+        libfuzzer_options: ["max_len=256000"],
+    }
+}
+
+cc_fuzz {
+    name: "zlib_deflate_set_dictionary_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/deflate_set_dictionary_fuzzer.cc"],
+}
+
+cc_fuzz {
+    name: "zlib_deflate_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/deflate_fuzzer.cc"],
 }
