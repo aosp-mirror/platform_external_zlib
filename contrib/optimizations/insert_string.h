@@ -1,6 +1,6 @@
 /* insert_string.h
  *
- * Copyright 2019 The Chromium Authors. All rights reserved.
+ * Copyright 2019 The Chromium Authors
  * Use of this source code is governed by a BSD-style license that can be
  * found in the Chromium source repository LICENSE file.
  */
@@ -57,10 +57,9 @@
 TARGET_CPU_WITH_CRC
 local INLINE Pos insert_string_simd(deflate_state* const s, const Pos str) {
   Pos ret;
-  unsigned *ip, val, h = 0;
+  unsigned val, h = 0;
 
-  ip = (unsigned*)&s->window[str];
-  val = *ip;
+  zmemcpy(&val, &s->window[str], sizeof(val));
 
   if (s->level >= 6)
     val &= 0xFFFFFF;
