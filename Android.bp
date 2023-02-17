@@ -98,7 +98,15 @@ cc_defaults {
     ],
     stl: "none",
     export_include_dirs: ["."],
-    srcs: libz_srcs,
+
+    host_supported: true,
+    native_bridge_supported: true,
+
+    vendor_available: true,
+    product_available: true,
+    ramdisk_available: true,
+    vendor_ramdisk_available: true,
+    recovery_available: true,
 
     arch: {
         arm: {
@@ -139,6 +147,9 @@ cc_defaults {
                 "-DARMV8_OS_MACOS",
             ],
         },
+        linux_bionic: {
+            enabled: true,
+        },
         linux_arm64: {
             cflags: [
                 // Since we're building for the platform, we claim to be Linux rather than
@@ -147,6 +158,9 @@ cc_defaults {
                 "-DARMV8_OS_LINUX",
             ],
         },
+        windows: {
+            enabled: true,
+        },
     },
 }
 
@@ -154,28 +168,14 @@ cc_library {
     name: "libz",
     defaults: ["libz_defaults"],
 
-    host_supported: true,
+    whole_static_libs: ["libz_static"],
+
     unique_host_soname: true,
     static_ndk_lib: true,
 
-    vendor_available: true,
-    product_available: true,
     vndk: {
         enabled: true,
         support_system_process: true,
-    },
-    ramdisk_available: true,
-    vendor_ramdisk_available: true,
-    recovery_available: true,
-    native_bridge_supported: true,
-
-    target: {
-        linux_bionic: {
-            enabled: true,
-        },
-        windows: {
-            enabled: true,
-        },
     },
 
     stubs: {
@@ -185,6 +185,21 @@ cc_library {
         ],
         symbol_file: "libz.map.txt",
     },
+}
+
+cc_library {
+    name: "libz_static",
+    defaults: ["libz_defaults"],
+    visibility: ["//external/angle"],
+
+    srcs: libz_srcs,
+
+    sdk_version: "minimum",
+
+    apex_available: [
+        "com.android.runtime",
+        "//apex_available:platform",
+    ],
 }
 
 // A more stable build of libz. Build configuration of this library should be
@@ -254,22 +269,38 @@ cc_binary {
     },
 }
 
+cc_library {
+    name: "zlib_google_compression_utils_portable",
+    defaults: ["libz_defaults"],
+    srcs: [
+        "google/compression_utils_portable.cc",
+    ],
+    export_include_dirs: ["google"],
+    host_supported: true,
+    shared_libs: ["libz"],
+    sdk_version: "minimum",
+    visibility: ["//external/angle"],
+    apex_available: [
+        "com.android.runtime",
+        "//apex_available:platform",
+    ],
+}
+
 cc_test {
     name: "zlib_tests",
     srcs: [
         "contrib/tests/infcover.cc",
         "contrib/tests/utils_unittest.cc",
-        "google/compression_utils_portable.cc",
     ],
     cflags: [
         "-Wno-unused-parameter",
     ],
     include_dirs: [
-        "external/zlib/google",
         // These tests include "gtest.h" rather than the usual "gtest/gtest.h".
         "external/googletest/googletest/include/gtest/",
     ],
     shared_libs: ["libz"],
+    static_libs: ["zlib_google_compression_utils_portable"],
     host_supported: true,
     test_suites: ["device-tests"],
 }
