@@ -360,9 +360,28 @@ cc_defaults {
 }
 
 cc_fuzz {
-    name: "zlib_uncompress_fuzzer",
+    name: "zlib_deflate_fuzzer",
     defaults: ["zlib_fuzz_defaults"],
-    srcs: ["contrib/tests/fuzzers/uncompress_fuzzer.cc"],
+    srcs: ["contrib/tests/fuzzers/deflate_fuzzer.cc"],
+}
+
+cc_fuzz {
+    name: "zlib_deflate_set_dictionary_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/deflate_set_dictionary_fuzzer.cc"],
+}
+
+cc_fuzz {
+    name: "zlib_inflate_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/inflate_fuzzer.cc"],
+}
+
+cc_fuzz {
+    name: "zlib_inflate_with_header_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/inflate_with_header_fuzzer.cc"],
+    enabled: false, // TODO: fix the third_party/zlib #include
 }
 
 cc_fuzz {
@@ -375,13 +394,7 @@ cc_fuzz {
 }
 
 cc_fuzz {
-    name: "zlib_deflate_set_dictionary_fuzzer",
+    name: "zlib_uncompress_fuzzer",
     defaults: ["zlib_fuzz_defaults"],
-    srcs: ["contrib/tests/fuzzers/deflate_set_dictionary_fuzzer.cc"],
-}
-
-cc_fuzz {
-    name: "zlib_deflate_fuzzer",
-    defaults: ["zlib_fuzz_defaults"],
-    srcs: ["contrib/tests/fuzzers/deflate_fuzzer.cc"],
+    srcs: ["contrib/tests/fuzzers/uncompress_fuzzer.cc"],
 }
