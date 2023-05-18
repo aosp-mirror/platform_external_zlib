@@ -381,7 +381,6 @@ cc_fuzz {
     name: "zlib_inflate_with_header_fuzzer",
     defaults: ["zlib_fuzz_defaults"],
     srcs: ["contrib/tests/fuzzers/inflate_with_header_fuzzer.cc"],
-    enabled: false, // TODO: fix the third_party/zlib #include
 }
 
 cc_fuzz {
