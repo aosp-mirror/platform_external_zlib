@@ -22,7 +22,7 @@ cc_library(
         "zconf.h",
         "zlib.h",
     ],
-    defines = ["_LARGEFILE64_SOURCE=1"],
+    local_defines = ["_LARGEFILE64_SOURCE=1"],
     includes = [
         ".",
     ],
@@ -51,7 +51,7 @@ cc_test(
     srcs = [
         "test/example.c",
     ],
-    defines = ["_FILE_OFFSET_BITS=64"],
+    local_defines = ["_FILE_OFFSET_BITS=64"],
     deps = [
         ":z",
     ],
