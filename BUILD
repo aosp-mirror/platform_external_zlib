@@ -22,10 +22,11 @@ cc_library(
         "zconf.h",
         "zlib.h",
     ],
-    local_defines = ["_LARGEFILE64_SOURCE=1"],
+    copts = ["-Wno-implicit-function-declaration"],
     includes = [
         ".",
     ],
+    local_defines = ["_LARGEFILE64_SOURCE=1"],
 )
 
 alias(
