@@ -233,19 +233,6 @@ cc_library {
     recovery_available: true,
 }
 
-cc_binary_host {
-    name: "minigzip",
-    srcs: ["contrib/minigzip/minigzip.c"],
-    cflags: [
-        "-Wall",
-        "-Werror",
-        "-DUSE_MMAP",
-        "-Wno-deprecated-non-prototype",
-    ],
-    static_libs: ["libz"],
-    stl: "none",
-}
-
 cc_binary {
     name: "zlib_bench",
     srcs: ["contrib/bench/zlib_bench.cc"],
