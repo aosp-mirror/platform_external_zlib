@@ -1,0 +1,16 @@
+name: "zlib"
+description: "A massively spiffy yet delicately unobtrusive compression library."
+third_party {
+  identifier: {
+    type: "Git"
+    value: "https://github.com/madler/zlib"
+    version: "1.2.8"
+  }
+  security {
+    tag: "NVD-CPE2.3:cpe:/a:zlib:zlib:1.2.8:*:*:*:*:*:*:*"
+  }
+  homepage: "http://zlib.net/"
+  version: "1.2.8"
+  last_upgrade_date { year: 2013 month: 05 day: 10 }
+  license_type: NOTICE
+}
