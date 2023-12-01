@@ -185,6 +185,18 @@ cc_library {
         ],
         symbol_file: "libz.map.txt",
     },
+
+    // When used by Vendor/Product APEX,
+    // libz should be treated like non-stable module.
+    // (Hence, should be bundled in APEX).
+    target: {
+        product: {
+            no_stubs: true,
+        },
+        vendor: {
+            no_stubs: true,
+        },
+    }
 }
 
 cc_library {
