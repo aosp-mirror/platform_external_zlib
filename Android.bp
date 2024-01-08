@@ -222,6 +222,7 @@ cc_library {
     visibility: [
         "//bootable/recovery/applypatch",
         "//bootable/recovery/tests",
+        "//bootable/recovery/updater",
     ],
     cflags: [
         // We do support hidden visibility, so turn that on.
