@@ -196,7 +196,7 @@ cc_library {
         vendor: {
             no_stubs: true,
         },
-    }
+    },
 }
 
 cc_library {
@@ -390,7 +390,7 @@ cc_fuzz {
     srcs: ["contrib/tests/fuzzers/streaming_inflate_fuzzer.cc"],
     fuzz_config: {
         libfuzzer_options: ["max_len=256000"],
-    }
+    },
 }
 
 cc_fuzz {
