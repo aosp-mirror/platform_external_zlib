@@ -196,19 +196,25 @@ cc_library {
         vendor: {
             no_stubs: true,
         },
-    }
+    },
 }
 
 cc_library {
     name: "libz_static",
     defaults: ["libz_defaults"],
-    visibility: ["//external/angle"],
+    visibility: [
+        "//external/angle",
+        "//system/unwinding/libunwindstack",
+    ],
 
     srcs: libz_srcs,
 
     sdk_version: "minimum",
+    min_sdk_version: "apex_inherit",
 
     apex_available: [
+        "com.android.art",
+        "com.android.art.debug",
         "com.android.runtime",
         "//apex_available:platform",
     ],
@@ -390,7 +396,7 @@ cc_fuzz {
     srcs: ["contrib/tests/fuzzers/streaming_inflate_fuzzer.cc"],
     fuzz_config: {
         libfuzzer_options: ["max_len=256000"],
-    }
+    },
 }
 
 cc_fuzz {
