@@ -1,19 +1,19 @@
 # This project was upgraded with external_updater.
 # Usage: tools/external_updater/updater.sh update zlib
-# For more info, check https://cs.android.com/android/platform/superproject/+/master:tools/external_updater/README.md
+# For more info, check https://cs.android.com/android/platform/superproject/+/main:tools/external_updater/README.md
 
 name: "zlib"
 description: "The Chromium fork of the zlib compression library."
 third_party {
-  url {
-    type: GIT
-    value: "https://chromium.googlesource.com/chromium/src/third_party/zlib/"
-  }
-  version: "14dd4c4455602c9b71a1a89b5cafd1f4030d2e3f"
   license_type: NOTICE
   last_upgrade_date {
-    year: 2023
-    month: 5
-    day: 16
+    year: 2024
+    month: 1
+    day: 10
+  }
+  identifier {
+    type: "Git"
+    value: "https://chromium.googlesource.com/chromium/src/third_party/zlib/"
+    version: "40e35a76af71511ee701001df5bc1ba216472d67"
   }
 }
