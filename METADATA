@@ -1,5 +1,5 @@
 # This project was upgraded with external_updater.
-# Usage: tools/external_updater/updater.sh update zlib
+# Usage: tools/external_updater/updater.sh update external/zlib
 # For more info, check https://cs.android.com/android/platform/superproject/+/main:tools/external_updater/README.md
 
 name: "zlib"
@@ -8,12 +8,12 @@ third_party {
   license_type: NOTICE
   last_upgrade_date {
     year: 2024
-    month: 1
-    day: 23
+    month: 2
+    day: 26
   }
   identifier {
     type: "Git"
     value: "https://chromium.googlesource.com/chromium/src/third_party/zlib/"
-    version: "63c0cec0344e6ba70f22bd690187088299baaa94"
+    version: "3787595bbbd3a374613713164db935e8331f5825"
   }
 }
