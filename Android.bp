@@ -33,7 +33,7 @@ cflags_shared = [
 ]
 
 cflags_arm = [
-    // We no longer support non-Neon platform builds, but the NDK just has one libz.
+    // Even the NDK dropped non-neon support in r24.
     "-DADLER32_SIMD_NEON",
     // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
     //    "-DINFLATE_CHUNK_SIMD_NEON",
