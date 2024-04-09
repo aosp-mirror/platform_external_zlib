@@ -245,6 +245,9 @@ cc_library {
         "//bootable/recovery/applypatch",
         "//bootable/recovery/tests",
         "//bootable/recovery/updater",
+        "//bootable/deprecated-ota/applypatch",
+        "//bootable/deprecated-ota/tests",
+        "//bootable/deprecated-ota/updater",
     ],
     // We only use the shared flags here; the whole point is that this
     // library behaves the same on all different architectures.
