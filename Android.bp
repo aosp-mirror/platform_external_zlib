@@ -14,26 +14,46 @@ license {
     ],
 }
 
-cflags_arm = [
-    // Testing with zlib_bench shows -O3 is a win for ARM but a bit of a wash
-    // for x86, so match the BUILD file in only enabling this for ARM.
+// These cflags are shared --- not only between all architectures,
+// but between libz and libz_stable too.
+cflags_shared = [
+    // Our compiler does support hidden visibility.
+    "-DHAVE_HIDDEN",
+    // Our compiler does support const.
+    "-DZLIB_CONST",
+    // Use the traditional Rabin-Karp rolling hash to match zlib DEFLATE output exactly.
+    "-DCHROMIUM_ZLIB_NO_CASTAGNOLI",
+    // Enable -O3 for everyone, as chromium's BUILD.gn does.
     "-O3",
-    // We no longer support non-Neon platform builds, but the NDK just has one libz.
-    "-DADLER32_SIMD_NEON",
-    // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
-    //    "-DINFLATE_CHUNK_SIMD_NEON",
-    // HWCAP_CRC32 is checked at runtime, so it's okay to turn crc32
-    // acceleration on for both 32- and 64-bit.
-    "-DCRC32_ARMV8_CRC32",
+    "-Wall",
+    "-Werror",
+    "-Wno-deprecated-non-prototype",
+    "-Wno-unused",
+    "-Wno-unused-parameter",
 ]
-cflags_arm64 = cflags_arm
+
+cflags_arm = [
+    // Even the NDK dropped non-neon support in r24.
+    "-DADLER32_SIMD_NEON",
+    // HWCAP_CRC32 is checked at runtime, so it's okay to enable crc32
+    // acceleration for both 64-bit and 32-bit (which may be armv7, at
+    // least for NDK users).
+    "-DCRC32_ARMV8_CRC32",
+    // TODO: DINFLATE_CHUNK_SIMD_NEON causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
+    // "-DINFLATE_CHUNK_SIMD_NEON",
+]
+cflags_arm64 = cflags_arm + ["-DINFLATE_CHUNK_READ_64LE"]
+
+cflags_riscv64 = [
+    // TODO: test and enable these.
+    // "-DRISCV_RVV",
+    // "-DADLER32_SIMD_RVV",
+]
 
 // The *host* x86 configuration (with *lower* CPU feature requirements).
 cflags_x86 = [
     // See ARMV8_OS_LINUX above.
     "-DX86_NOT_WINDOWS",
-    // TODO: see arm above.
-    //    "-DINFLATE_CHUNK_SIMD_SSE2",
     // Android's host CPU feature requirements are *lower* than the
     // corresponding device CPU feature requirements, so it's easier to just
     // say "no SIMD for you" rather than specificially disable SSSE3.
@@ -42,15 +62,17 @@ cflags_x86 = [
     // https://issuetracker.google.com/171235570
     "-DCPU_NO_SIMD",
 ]
-// The *device* x86 configuration (with *higher* CPU feature requirements).
+cflags_x86_64 = cflags_x86 + ["-DINFLATE_CHUNK_READ_64LE"]
+
+// The additional *device* x86/x86_64 configuration. Devices have *higher* CPU
+// feature requirements than the host.
 cflags_android_x86 = [
-    // Android's x86/x86-64 ABI includes SSE2 and SSSE3.
+    // Android's x86 and x86-64 ABIs both include SSE2 and SSSE3.
     "-UCPU_NO_SIMD",
     "-DADLER32_SIMD_SSSE3",
+    // TODO: DINFLATE_CHUNK_SIMD_SSE2 causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
+    // "-DINFLATE_CHUNK_SIMD_SSE2",
 ]
-
-// This optimization is applicable to arm64 and x86-64.
-cflags_64 = ["-DINFLATE_CHUNK_READ_64LE"]
 
 libz_srcs = [
     "adler32.c",
@@ -83,19 +105,7 @@ libz_srcs = [
 cc_defaults {
     name: "libz_defaults",
 
-    cflags: [
-        // We do support hidden visibility, so turn that on.
-        "-DHAVE_HIDDEN",
-        // We do support const, so turn that on.
-        "-DZLIB_CONST",
-        // Enable -O3 as per chromium.
-        "-O3",
-        "-Wall",
-        "-Werror",
-        "-Wno-deprecated-non-prototype",
-        "-Wno-unused",
-        "-Wno-unused-parameter",
-    ],
+    cflags: cflags_shared,
     stl: "none",
     export_include_dirs: ["."],
 
@@ -118,13 +128,16 @@ cc_defaults {
             cflags: cflags_arm,
         },
         arm64: {
-            cflags: cflags_arm64 + cflags_64,
+            cflags: cflags_arm64,
+        },
+        riscv64: {
+            cflags: cflags_riscv64,
         },
         x86: {
             cflags: cflags_x86,
         },
         x86_64: {
-            cflags: cflags_x86 + cflags_64,
+            cflags: cflags_x86_64,
         },
     },
     target: {
@@ -185,65 +198,66 @@ cc_library {
         ],
         symbol_file: "libz.map.txt",
     },
+
+    // When used by Vendor/Product APEX,
+    // libz should be treated like non-stable module.
+    // (Hence, should be bundled in APEX).
+    target: {
+        product: {
+            no_stubs: true,
+        },
+        vendor: {
+            no_stubs: true,
+        },
+    },
 }
 
 cc_library {
     name: "libz_static",
     defaults: ["libz_defaults"],
-    visibility: ["//external/angle"],
+    visibility: [
+        "//external/angle",
+        "//system/unwinding/libunwindstack",
+    ],
 
     srcs: libz_srcs,
 
     sdk_version: "minimum",
+    min_sdk_version: "apex_inherit",
 
     apex_available: [
+        "com.android.art",
+        "com.android.art.debug",
         "com.android.runtime",
         "//apex_available:platform",
     ],
 }
 
-// A more stable build of libz. Build configuration of this library should be
-// the same for different targets. This is only used by imgdiff.
-
+// A build of libz with identical behavior between architectures.
+// Used by legacy OTA tools such as imgdiff and updater and their tests.
+// New code should not use this library, because new code should not make
+// assumptions about the _compressed_ bits, beyond the fact that they will
+// decompress to the same input bytes. The actual compressed byte sequences
+// can and do differ over time.
 cc_library {
     name: "libz_stable",
     visibility: [
         "//bootable/recovery/applypatch",
         "//bootable/recovery/tests",
+        "//bootable/recovery/updater",
+        "//bootable/deprecated-ota/applypatch",
+        "//bootable/deprecated-ota/tests",
+        "//bootable/deprecated-ota/updater",
     ],
-    cflags: [
-        // We do support hidden visibility, so turn that on.
-        "-DHAVE_HIDDEN",
-        // We do support const, so turn that on.
-        "-DZLIB_CONST",
-        // Enable -O3 as per chromium
-        "-O3",
-        "-Wall",
-        "-Werror",
-        "-Wno-deprecated-non-prototype",
-        "-Wno-unused",
-        "-Wno-unused-parameter",
-    ],
+    // We only use the shared flags here; the whole point is that this
+    // library behaves the same on all different architectures.
+    cflags: cflags_shared,
     stl: "none",
     export_include_dirs: ["."],
     srcs: libz_srcs,
-
     host_supported: true,
     vendor_available: true,
     recovery_available: true,
-}
-
-cc_binary_host {
-    name: "minigzip",
-    srcs: ["contrib/minigzip/minigzip.c"],
-    cflags: [
-        "-Wall",
-        "-Werror",
-        "-DUSE_MMAP",
-        "-Wno-deprecated-non-prototype",
-    ],
-    static_libs: ["libz"],
-    stl: "none",
 }
 
 cc_binary {
@@ -293,6 +307,7 @@ cc_test {
         "contrib/tests/utils_unittest.cc",
     ],
     cflags: [
+        "-DCMAKE_STANDALONE_UNITTESTS",
         "-Wno-unused-parameter",
     ],
     include_dirs: [
@@ -360,18 +375,9 @@ cc_defaults {
 }
 
 cc_fuzz {
-    name: "zlib_uncompress_fuzzer",
+    name: "zlib_deflate_fuzzer",
     defaults: ["zlib_fuzz_defaults"],
-    srcs: ["contrib/tests/fuzzers/uncompress_fuzzer.cc"],
-}
-
-cc_fuzz {
-    name: "zlib_streaming_inflate_fuzzer",
-    defaults: ["zlib_fuzz_defaults"],
-    srcs: ["contrib/tests/fuzzers/streaming_inflate_fuzzer.cc"],
-    fuzz_config: {
-        libfuzzer_options: ["max_len=256000"],
-    }
+    srcs: ["contrib/tests/fuzzers/deflate_fuzzer.cc"],
 }
 
 cc_fuzz {
@@ -381,7 +387,28 @@ cc_fuzz {
 }
 
 cc_fuzz {
-    name: "zlib_deflate_fuzzer",
+    name: "zlib_inflate_fuzzer",
     defaults: ["zlib_fuzz_defaults"],
-    srcs: ["contrib/tests/fuzzers/deflate_fuzzer.cc"],
+    srcs: ["contrib/tests/fuzzers/inflate_fuzzer.cc"],
+}
+
+cc_fuzz {
+    name: "zlib_inflate_with_header_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/inflate_with_header_fuzzer.cc"],
+}
+
+cc_fuzz {
+    name: "zlib_streaming_inflate_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/streaming_inflate_fuzzer.cc"],
+    fuzz_config: {
+        libfuzzer_options: ["max_len=256000"],
+    },
+}
+
+cc_fuzz {
+    name: "zlib_uncompress_fuzzer",
+    defaults: ["zlib_fuzz_defaults"],
+    srcs: ["contrib/tests/fuzzers/uncompress_fuzzer.cc"],
 }
