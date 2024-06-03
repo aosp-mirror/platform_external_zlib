@@ -183,7 +183,7 @@ cc_defaults {
     name: "libz_thin_lto_defaults",
 
     target: {
-        android: {
+        android_arm64: {
             lto: {
                 thin: true,
             },
