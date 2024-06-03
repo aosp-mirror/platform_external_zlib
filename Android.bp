@@ -33,22 +33,27 @@ cflags_shared = [
 ]
 
 cflags_arm = [
-    // We no longer support non-Neon platform builds, but the NDK just has one libz.
+    // Even the NDK dropped non-neon support in r24.
     "-DADLER32_SIMD_NEON",
-    // TODO: causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
-    //    "-DINFLATE_CHUNK_SIMD_NEON",
-    // HWCAP_CRC32 is checked at runtime, so it's okay to turn crc32
-    // acceleration on for both 32- and 64-bit.
+    // HWCAP_CRC32 is checked at runtime, so it's okay to enable crc32
+    // acceleration for both 64-bit and 32-bit (which may be armv7, at
+    // least for NDK users).
     "-DCRC32_ARMV8_CRC32",
+    // TODO: DINFLATE_CHUNK_SIMD_NEON causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
+    // "-DINFLATE_CHUNK_SIMD_NEON",
 ]
-cflags_arm64 = cflags_arm
+cflags_arm64 = cflags_arm + ["-DINFLATE_CHUNK_READ_64LE"]
+
+cflags_riscv64 = [
+    // TODO: test and enable these.
+    // "-DRISCV_RVV",
+    // "-DADLER32_SIMD_RVV",
+]
 
 // The *host* x86 configuration (with *lower* CPU feature requirements).
 cflags_x86 = [
     // See ARMV8_OS_LINUX above.
     "-DX86_NOT_WINDOWS",
-    // TODO: see arm above.
-    //    "-DINFLATE_CHUNK_SIMD_SSE2",
     // Android's host CPU feature requirements are *lower* than the
     // corresponding device CPU feature requirements, so it's easier to just
     // say "no SIMD for you" rather than specificially disable SSSE3.
@@ -57,15 +62,17 @@ cflags_x86 = [
     // https://issuetracker.google.com/171235570
     "-DCPU_NO_SIMD",
 ]
-// The *device* x86 configuration (with *higher* CPU feature requirements).
+cflags_x86_64 = cflags_x86 + ["-DINFLATE_CHUNK_READ_64LE"]
+
+// The additional *device* x86/x86_64 configuration. Devices have *higher* CPU
+// feature requirements than the host.
 cflags_android_x86 = [
-    // Android's x86/x86-64 ABI includes SSE2 and SSSE3.
+    // Android's x86 and x86-64 ABIs both include SSE2 and SSSE3.
     "-UCPU_NO_SIMD",
     "-DADLER32_SIMD_SSSE3",
+    // TODO: DINFLATE_CHUNK_SIMD_SSE2 causes `atest org.apache.harmony.tests.java.util.zip.DeflaterTest` failures.
+    // "-DINFLATE_CHUNK_SIMD_SSE2",
 ]
-
-// This optimization is applicable to arm64 and x86-64.
-cflags_64 = ["-DINFLATE_CHUNK_READ_64LE"]
 
 libz_srcs = [
     "adler32.c",
@@ -121,13 +128,16 @@ cc_defaults {
             cflags: cflags_arm,
         },
         arm64: {
-            cflags: cflags_arm64 + cflags_64,
+            cflags: cflags_arm64,
+        },
+        riscv64: {
+            cflags: cflags_riscv64,
         },
         x86: {
             cflags: cflags_x86,
         },
         x86_64: {
-            cflags: cflags_x86 + cflags_64,
+            cflags: cflags_x86_64,
         },
     },
     target: {
@@ -167,19 +177,33 @@ cc_defaults {
     },
 }
 
+// TODO: Remove this when b/328163089 is fixed.
+// Thin lto will be enabled by default in the future.
+cc_defaults {
+    name: "libz_thin_lto_defaults",
+
+    target: {
+        android: {
+            lto: {
+                thin: true,
+            },
+        },
+    },
+}
+
 cc_library {
     name: "libz",
-    defaults: ["libz_defaults"],
+    defaults: [
+        "libz_defaults",
+        "libz_thin_lto_defaults",
+    ],
 
     whole_static_libs: ["libz_static"],
 
     unique_host_soname: true,
     static_ndk_lib: true,
 
-    vndk: {
-        enabled: true,
-        support_system_process: true,
-    },
+    double_loadable: true,
 
     stubs: {
         versions: [
@@ -231,10 +255,14 @@ cc_library {
 // can and do differ over time.
 cc_library {
     name: "libz_stable",
+    defaults: ["libz_thin_lto_defaults"],
     visibility: [
         "//bootable/recovery/applypatch",
         "//bootable/recovery/tests",
         "//bootable/recovery/updater",
+        "//bootable/deprecated-ota/applypatch",
+        "//bootable/deprecated-ota/tests",
+        "//bootable/deprecated-ota/updater",
     ],
     // We only use the shared flags here; the whole point is that this
     // library behaves the same on all different architectures.
