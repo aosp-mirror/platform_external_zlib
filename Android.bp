@@ -315,6 +315,23 @@ cc_library {
     ],
 }
 
+cc_library_static {
+    name: "tflite_support_libz",
+    defaults: ["libz_defaults"],
+    srcs: [
+        "contrib/minizip/ioapi.c",
+        "contrib/minizip/unzip.c",
+    ],
+    sdk_version: "current",
+    // TODO: switch this to "apex_inherit".
+    min_sdk_version: "30",
+    apex_available: [
+        "//apex_available:platform",
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
+}
+
 cc_test {
     name: "zlib_tests",
     srcs: [
