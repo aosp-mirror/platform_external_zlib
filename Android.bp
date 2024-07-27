@@ -205,6 +205,8 @@ cc_library {
             no_stubs: true,
         },
     },
+
+    afdo: true,
 }
 
 cc_library {
