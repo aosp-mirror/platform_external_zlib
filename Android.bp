@@ -194,6 +194,14 @@ cc_library {
         symbol_file: "libz.map.txt",
     },
 
+    // Even though libz provides "stubs", it still needs to be available to com.android.runtime
+    // because "linker" in the runtime apex is linked statically to libz. (Note that linker is a
+    // static executable.)
+    apex_available: [
+        "com.android.runtime",
+        "//apex_available:platform",
+    ],
+
     // When used by Vendor/Product APEX,
     // libz should be treated like non-stable module.
     // (Hence, should be bundled in APEX).
