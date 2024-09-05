@@ -179,7 +179,7 @@ cc_library {
     name: "libz",
     defaults: ["libz_defaults"],
 
-    whole_static_libs: ["libz_static"],
+    srcs: libz_srcs,
 
     unique_host_soname: true,
     static_ndk_lib: true,
@@ -207,24 +207,6 @@ cc_library {
     },
 
     afdo: true,
-}
-
-cc_library {
-    name: "libz_static",
-    defaults: ["libz_defaults"],
-    visibility: ["//visibility:private"],
-
-    srcs: libz_srcs,
-
-    sdk_version: "minimum",
-    min_sdk_version: "apex_inherit",
-
-    apex_available: [
-        "com.android.art",
-        "com.android.art.debug",
-        "com.android.runtime",
-        "//apex_available:platform",
-    ],
 }
 
 // A build of libz with identical behavior between architectures.
@@ -347,9 +329,6 @@ ndk_library {
     symbol_file: "libz.map.txt",
     first_version: "9",
     unversioned_until: "current",
-    export_header_libs: [
-        "libz_headers",
-    ],
 }
 
 // Export zlib headers for inclusion in the musl sysroot.
