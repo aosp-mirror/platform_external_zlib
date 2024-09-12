@@ -104,6 +104,9 @@ libz_srcs = [
 
 cc_defaults {
     name: "libz_defaults",
+    defaults: [
+        "bug_24465209_workaround",
+    ],
 
     cflags: cflags_shared,
     stl: "none",
@@ -120,11 +123,6 @@ cc_defaults {
 
     arch: {
         arm: {
-            // TODO: This is to work around b/24465209. Remove after root cause
-            // is fixed.
-            pack_relocations: false,
-            ldflags: ["-Wl,--hash-style=both"],
-
             cflags: cflags_arm,
         },
         arm64: {
@@ -177,26 +175,9 @@ cc_defaults {
     },
 }
 
-// TODO: Remove this when b/328163089 is fixed.
-// Thin lto will be enabled by default in the future.
-cc_defaults {
-    name: "libz_thin_lto_defaults",
-
-    target: {
-        android_arm64: {
-            lto: {
-                thin: true,
-            },
-        },
-    },
-}
-
 cc_library {
     name: "libz",
-    defaults: [
-        "libz_defaults",
-        "libz_thin_lto_defaults",
-    ],
+    defaults: ["libz_defaults"],
 
     whole_static_libs: ["libz_static"],
 
@@ -252,7 +233,6 @@ cc_library {
 // can and do differ over time.
 cc_library {
     name: "libz_stable",
-    defaults: ["libz_thin_lto_defaults"],
     visibility: [
         "//bootable/recovery/applypatch",
         "//bootable/recovery/tests",
@@ -309,6 +289,23 @@ cc_library {
     apex_available: [
         "com.android.runtime",
         "//apex_available:platform",
+    ],
+}
+
+cc_library_static {
+    name: "tflite_support_libz",
+    defaults: ["libz_defaults"],
+    srcs: [
+        "contrib/minizip/ioapi.c",
+        "contrib/minizip/unzip.c",
+    ],
+    sdk_version: "current",
+    // TODO: switch this to "apex_inherit".
+    min_sdk_version: "30",
+    apex_available: [
+        "//apex_available:platform",
+        "com.android.adservices",
+        "com.android.extservices",
     ],
 }
 
