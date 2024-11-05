@@ -45,9 +45,11 @@ cflags_arm = [
 cflags_arm64 = cflags_arm + ["-DINFLATE_CHUNK_READ_64LE"]
 
 cflags_riscv64 = [
-    // TODO: test and enable these.
-    // "-DRISCV_RVV",
-    // "-DADLER32_SIMD_RVV",
+    "-DRISCV_RVV",
+    "-DADLER32_SIMD_RVV",
+    "-DDEFLATE_SLIDE_HASH_RVV",
+    "-DINFLATE_CHUNK_GENERIC",
+    "-DINFLATE_CHUNK_READ_64LE",
 ]
 
 // The *host* x86 configuration (with *lower* CPU feature requirements).
@@ -194,13 +196,12 @@ cc_library {
         symbol_file: "libz.map.txt",
     },
 
-    // Even though libz provides "stubs", it still needs to be available to com.android.runtime
-    // because "linker" in the runtime apex is linked statically to libz. (Note that linker is a
-    // static executable.)
-    apex_available: [
-        "com.android.runtime",
-        "//apex_available:platform",
-    ],
+    // linker/linker64 statically link zlib.
+    static: {
+        apex_available: [
+            "com.android.runtime",
+        ],
+    },
 
     // When used by Vendor/Product APEX,
     // libz should be treated like non-stable module.
