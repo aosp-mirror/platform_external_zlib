@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "compression_utils_portable.h"
-#include "gtest.h"
+#include "gtest/gtest.h"
 
 #if !defined(CMAKE_STANDALONE_UNITTESTS)
 #include "base/files/file_path.h"
