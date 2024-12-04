@@ -173,7 +173,6 @@ cc_library(
         "zconf.h",
         "zlib.h",
     ],
-    defines = ["CHROMIUM_ZLIB_NO_CHROMECONF"],
     visibility = ["//visibility:public"],
 )
 

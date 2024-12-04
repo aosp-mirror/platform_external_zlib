@@ -14,7 +14,7 @@
  * macro to opt out. While this works today, there's no guarantee that building
  * zlib outside of Chromium keeps working in the future.
  */
-#if !defined(CHROMIUM_ZLIB_NO_CHROMECONF)
+#if 0
 /* This include does prefixing as below, but with an updated set of names.  Also
  * sets up export macros in component builds. */
 #include "chromeconf.h"
