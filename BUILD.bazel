@@ -151,7 +151,7 @@ ZLIB_LINKOPTS = select({
     "//conditions:default": [],
 })
 
-ZLIB_SIMD_SRC = [
+ZLIB_INFLATE_SRC = [
     "adler32_simd.c",
     "adler32_simd.h",
     "contrib/optimizations/chunkcopy.h",
@@ -167,14 +167,6 @@ ZLIB_SIMD_SRC = [
     "slide_hash_simd.h",
 ]
 
-ZLIB_INFLATE_SRC = select({
-    ":linux_x86_64": ZLIB_SIMD_SRC,
-    ":osx_apple": ["inflate.c"],
-    ":osx_intel": ZLIB_SIMD_SRC,
-    ":windows_x86_64": ZLIB_SIMD_SRC,
-    "//conditions:default": [],
-})
-
 cc_library(
     name = "zlib_hdrs",
     hdrs = [
@@ -182,7 +174,6 @@ cc_library(
         "zlib.h",
     ],
     defines = ["CHROMIUM_ZLIB_NO_CHROMECONF"],
-    includes = ["."],
     visibility = ["//visibility:public"],
 )
 
@@ -214,7 +205,6 @@ cc_library(
         "zutil.h",
     ] + ZLIB_INFLATE_SRC,
     copts = ZLIB_COPTS,
-    includes = ["."],
     linkopts = ZLIB_LINKOPTS,
     local_defines = ZLIB_DEFINES,
     visibility = ["//visibility:public"],
