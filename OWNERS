@@ -2,3 +2,4 @@ agl@chromium.org
 cavalcantii@chromium.org
 cblume@chromium.org
 scroggo@google.com
+include platform/system/core:/janitors/OWNERS #{LAST_RESORT_SUGGESTION}
