@@ -1,0 +1,269 @@
+# Description:
+#   zlib is a general purpose data compression library.
+load("@rules_license//rules:license.bzl", "license")
+
+package(
+    default_applicable_licenses = [":license"],
+    default_visibility = ["//visibility:public"],
+)
+
+license(
+    name = "license",
+    package_name = "zlib",
+)
+
+licenses(["notice"])
+
+exports_files(["LICENSE"])
+
+config_setting(
+    name = "linux_aarch64",
+    constraint_values = [
+        "@platforms//cpu:aarch64",
+        "@platforms//os:linux",
+    ],
+)
+
+config_setting(
+    name = "linux_x86_64",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+)
+
+config_setting(
+    name = "osx_apple",
+    constraint_values = [
+        "@platforms//os:osx",
+        "@platforms//cpu:aarch64",
+    ],
+)
+
+config_setting(
+    name = "osx_intel",
+    constraint_values = [
+        "@platforms//os:osx",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+config_setting(
+    name = "windows_x86_64",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+)
+
+ZLIB_DEFINES = ["_LARGEFILE64_SOURCE=1"] + select({
+    ":linux_aarch64": [
+        "ADLER32_SIMD_NEON",
+        "ARMV8_OS_LINUX",
+        "CRC32_ARMV8_CRC32",
+        "DEFLATE_SLIDE_HASH_NEON",
+        "HAVE_STDDEF_H",
+        "HAVE_STDINT_H",
+        "HAVE_SYS_TYPES_H",
+        "INFLATE_CHUNK_READ_64LE",
+        "INFLATE_CHUNK_SIMD_NEON",
+    ],
+    ":linux_x86_64": [
+        "ADLER32_SIMD_SSSE3",
+        "CRC32_SIMD_SSE42_PCLMUL",
+        "DEFLATE_SLIDE_HASH_SSE2",
+        "HAVE_STDDEF_H",
+        "HAVE_STDINT_H",
+        "HAVE_SYS_TYPES_H",
+        "INFLATE_CHUNK_READ_64LE",
+        "INFLATE_CHUNK_SIMD_SSE2",
+        "X86_NOT_WINDOWS",
+    ],
+    ":osx_apple": [
+        "ADLER32_SIMD_NEON",
+        "ARMV8_OS_MACOS",
+        "CRC32_ARMV8_CRC32",
+        "DEFLATE_SLIDE_HASH_NEON",
+        "HAVE_STDDEF_H",
+        "HAVE_STDINT_H",
+        "HAVE_SYS_TYPES_H",
+        "INFLATE_CHUNK_READ_64LE",
+        "INFLATE_CHUNK_SIMD_NEON",
+    ],
+    ":osx_intel": [
+        "ADLER32_SIMD_SSSE3",
+        "CRC32_SIMD_SSE42_PCLMUL",
+        "DEFLATE_SLIDE_HASH_SSE2",
+        "HAVE_STDDEF_H",
+        "HAVE_STDINT_H",
+        "HAVE_SYS_TYPES_H",
+        "INFLATE_CHUNK_READ_64LE",
+        "INFLATE_CHUNK_SIMD_SSE2",
+        "X86_NOT_WINDOWS",
+    ],
+    ":windows_x86_64": [
+        "ADLER32_SIMD_SSSE3",
+        "CRC32_SIMD_SSE42_PCLMUL",
+        "DEFLATE_SLIDE_HASH_SSE2",
+        "HAVE_STDDEF_H",
+        "HAVE_STDINT_H",
+        "INFLATE_CHUNK_READ_64LE",
+        "INFLATE_CHUNK_SIMD_SSE2",
+        "_CRT_NONSTDC_NO_DEPRECATE",
+        "_CRT_SECURE_NO_DEPRECATE",
+        "X86_WINDOWS",
+    ],
+})
+
+ZLIB_COPTS = select({
+    ":linux_x86_64": [
+        "-mavx512f",
+        "-mpclmul",
+        "-msse4.2",
+        "-mssse3",
+        "-mvpclmulqdq",
+        "-pthread",
+    ],
+    ":osx_apple": [],  # No specific copts for osx_apple
+    ":osx_intel": [
+        "-mavx512f",
+        "-mpclmul",
+        "-msse4.2",
+        "-mssse3",
+        "-mvpclmulqdq",
+        "-pthread",
+    ],
+    ":windows_x86_64": [
+        "-mavx512f",
+        "-mpclmul",
+        "-msse4.2",
+        "-mssse3",
+        "-mvpclmulqdq",
+    ],
+    "//conditions:default": [],  # No default copts
+})
+
+ZLIB_LINKOPTS = select({
+    ":linux_x86_64": ["-lpthread"],
+    ":osx_apple": ["-lpthread"],
+    ":osx_intel": ["-lpthread"],
+    ":windows_x86_64": [],
+    "//conditions:default": [],
+})
+
+ZLIB_INFLATE_SRC = [
+    "adler32_simd.c",
+    "adler32_simd.h",
+    "contrib/optimizations/chunkcopy.h",
+    "contrib/optimizations/inffast_chunk.c",
+    "contrib/optimizations/inffast_chunk.h",
+    "contrib/optimizations/inflate.c",
+    "contrib/optimizations/insert_string.h",
+    "cpu_features.c",
+    "cpu_features.h",
+    "crc_folding.c",
+    "crc32_simd.c",
+    "crc32_simd.h",
+    "slide_hash_simd.h",
+]
+
+cc_library(
+    name = "zlib_hdrs",
+    hdrs = [
+        "zconf.h",
+        "zlib.h",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "zlibstatic",
+    srcs = [
+        "adler32.c",
+        "compress.c",
+        "crc32.c",
+        "crc32.h",
+        "deflate.c",
+        "deflate.h",
+        "gzclose.c",
+        "gzguts.h",
+        "gzlib.c",
+        "gzread.c",
+        "gzwrite.c",
+        "infback.c",
+        "inffast.c",
+        "inffast.h",
+        "inffixed.h",
+        "inflate.h",
+        "inftrees.c",
+        "inftrees.h",
+        "trees.c",
+        "trees.h",
+        "uncompr.c",
+        "zutil.c",
+        "zutil.h",
+    ] + ZLIB_INFLATE_SRC,
+    copts = ZLIB_COPTS,
+    linkopts = ZLIB_LINKOPTS,
+    local_defines = ZLIB_DEFINES,
+    visibility = ["//visibility:public"],
+    deps = [":zlib_hdrs"],
+)
+
+alias(
+    name = "zlib",
+    actual = ":zlibstatic",
+)
+
+cc_binary(
+    name = "zlibshared",
+    srcs = [
+        "adler32.c",
+        "compress.c",
+        "crc32.c",
+        "crc32.h",
+        "deflate.c",
+        "deflate.h",
+        "gzclose.c",
+        "gzguts.h",
+        "gzlib.c",
+        "gzread.c",
+        "gzwrite.c",
+        "infback.c",
+        "inffast.c",
+        "inffast.h",
+        "inffixed.h",
+        "inflate.h",
+        "inftrees.c",
+        "inftrees.h",
+        "trees.c",
+        "trees.h",
+        "uncompr.c",
+        "zutil.c",
+        "zutil.h",
+    ] + ZLIB_INFLATE_SRC,
+    copts = ZLIB_COPTS,
+    # includes = ["."],
+    linkopts = ZLIB_LINKOPTS,
+    linkshared = True,  # Create a shared library (DLL)
+    local_defines = ZLIB_DEFINES,
+    visibility = ["//visibility:public"],
+    deps = [":zlib_hdrs"],
+)
+
+cc_test(
+    name = "zlib_unittests",
+    srcs = [
+        "contrib/tests/infcover.cc",
+        "contrib/tests/infcover.h",
+        "contrib/tests/standalone_test_runner.cc",
+        "contrib/tests/utils_unittest.cc",
+        "google/compression_utils_portable.cc",
+    ] + glob(["google/*.h"]),
+    defines = ["CMAKE_STANDALONE_UNITTESTS"],
+    includes = ["google"],
+    deps = [
+        ":zlibstatic",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
