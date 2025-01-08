@@ -10,6 +10,7 @@ package(
 license(
     name = "license",
     package_name = "zlib",
+    license_kinds = ["@rules_license//licenses/spdx:BSD-3-Clause"],
 )
 
 licenses(["notice"])
