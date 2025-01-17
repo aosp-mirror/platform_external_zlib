@@ -216,6 +216,7 @@ cc_library {
     },
 
     afdo: true,
+    min_sdk_version: "apex_inherit",
 }
 
 // A build of libz with identical behavior between architectures.
